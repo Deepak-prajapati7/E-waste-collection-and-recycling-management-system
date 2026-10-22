@@ -1,21 +1,47 @@
 :root {
-  --bg: #07131d;
-  --bg-2: #0d1f2d;
-  --panel: rgba(14, 28, 36, 0.8);
-  --panel-soft: rgba(21, 39, 49, 0.9);
-  --card: rgba(17, 34, 42, 0.9);
-  --card-2: rgba(12, 24, 31, 0.7);
-  --line: rgba(150, 180, 196, 0.18);
-  --text: #ebf4ff;
-  --muted: #a7c2d7;
-  --primary: #6ee7c8;
-  --primary-2: #2dd4bf;
-  --accent: #8bb8ff;
-  --accent-2: #7c6af5;
-  --success: #a3f7b6;
-  --warning: #f7d56b;
-  --danger: #ff7d7d;
-  --shadow: 0 25px 60px rgba(6, 12, 17, 0.32);
+  color-scheme: light;
+  --bg: #f3f3e9;
+  --bg-2: #e8eddf;
+  --surface: #fffef9;
+  --surface-raised: #f8f8f0;
+  --input-bg: #fffef9;
+  --line: #d9dfd0;
+  --text: #26382b;
+  --muted: #69786b;
+  --primary: #557b42;
+  --primary-2: #76934d;
+  --accent: #9aab68;
+  --accent-2: #806746;
+  --success: #39754c;
+  --warning: #95701c;
+  --danger: #a34f43;
+  --shadow: 0 18px 42px rgba(45, 59, 39, 0.09);
+  --wash: rgba(85, 123, 66, 0.08);
+  --wash-strong: rgba(85, 123, 66, 0.13);
+  --focus: rgba(85, 123, 66, 0.24);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #17241b;
+  --bg-2: #1d2e22;
+  --surface: #203127;
+  --surface-raised: #26392d;
+  --input-bg: #1b2a20;
+  --line: #3b5140;
+  --text: #edf1e5;
+  --muted: #b0bdaa;
+  --primary: #b2c98a;
+  --primary-2: #8ba66a;
+  --accent: #c6b681;
+  --accent-2: #b29a73;
+  --success: #a8d0a8;
+  --warning: #e7cb78;
+  --danger: #e39a88;
+  --shadow: 0 18px 42px rgba(5, 12, 7, 0.24);
+  --wash: rgba(178, 201, 138, 0.08);
+  --wash-strong: rgba(178, 201, 138, 0.13);
+  --focus: rgba(178, 201, 138, 0.22);
 }
 
 * {
@@ -31,10 +57,10 @@ body {
   min-height: 100vh;
   font-family: "Inter", sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(110, 231, 200, 0.14), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(124, 106, 245, 0.18), transparent 35%),
-    linear-gradient(180deg, var(--bg) 0%, #091922 100%);
+    radial-gradient(circle at 5% 0%, var(--wash-strong), transparent 28%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
   color: var(--text);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 img {
@@ -84,9 +110,9 @@ textarea {
   display: grid;
   place-items: center;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--primary), var(--accent-2));
-  color: #02150f;
-  box-shadow: 0 10px 24px rgba(45, 212, 191, 0.35);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fffef9;
+  box-shadow: 0 8px 20px var(--wash-strong);
 }
 
 .brand-name {
@@ -122,6 +148,26 @@ textarea {
   gap: 12px;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.theme-toggle-icon {
+  color: var(--primary);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 button {
   border: none;
   cursor: pointer;
@@ -141,13 +187,13 @@ button:hover {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  box-shadow: 0 16px 30px rgba(45, 212, 191, 0.22);
-  color: #04211d;
+  background: var(--primary);
+  box-shadow: 0 8px 18px var(--wash-strong);
+  color: #fffef9;
 }
 
 .secondary-btn {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface);
   border: 1px solid var(--line);
   color: var(--text);
 }
@@ -179,8 +225,8 @@ button:hover {
   margin-bottom: 18px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(110, 231, 200, 0.08);
-  border: 1px solid rgba(110, 231, 200, 0.16);
+  background: var(--wash);
+  border: 1px solid var(--line);
   color: var(--primary);
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -242,7 +288,7 @@ button:hover {
 }
 
 .glass-card {
-  background: linear-gradient(180deg, rgba(17, 35, 44, 0.9), rgba(10, 21, 28, 0.8));
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 28px;
   box-shadow: var(--shadow);
@@ -272,8 +318,8 @@ button:hover {
   border-radius: 999px;
   font-size: 0.72rem;
   color: var(--success);
-  background: rgba(163, 247, 182, 0.08);
-  border: 1px solid rgba(163, 247, 182, 0.14);
+  background: var(--wash);
+  border: 1px solid var(--line);
 }
 
 .status-pill::before {
@@ -292,14 +338,14 @@ button:hover {
 }
 
 .mini-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 16px 18px;
 }
 
 .mini-card.accent {
-  background: linear-gradient(135deg, rgba(110, 231, 200, 0.12), rgba(124, 106, 245, 0.08));
+  background: var(--wash-strong);
 }
 
 .mini-card small {
@@ -318,7 +364,7 @@ button:hover {
 
 .chart-block {
   margin-top: 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-raised);
   border-radius: 18px;
   border: 1px solid var(--line);
   padding: 18px 12px 10px;
@@ -336,8 +382,8 @@ button:hover {
   display: block;
   width: 100%;
   border-radius: 12px 12px 0 0;
-  background: linear-gradient(180deg, var(--primary), var(--accent));
-  box-shadow: 0 16px 28px rgba(110, 231, 200, 0.2);
+  background: linear-gradient(180deg, var(--primary-2), var(--primary));
+  box-shadow: 0 10px 20px var(--wash);
   animation: rise 0.8s ease;
 }
 
@@ -384,7 +430,7 @@ button:hover {
 }
 
 .panel-section {
-  background: rgba(15, 27, 35, 0.7);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 26px;
   padding: 24px;
@@ -415,7 +461,7 @@ button:hover {
 }
 
 .category-card {
-  background: linear-gradient(180deg, rgba(14, 28, 35, 0.9), rgba(13, 24, 31, 0.8));
+  background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 18px 18px 16px;
@@ -436,8 +482,8 @@ button:hover {
   place-items: center;
   border-radius: 14px;
   font-size: 1.2rem;
-  background: rgba(139, 184, 255, 0.1);
-  border: 1px solid rgba(139, 184, 255, 0.14);
+  background: var(--wash);
+  border: 1px solid var(--line);
 }
 
 .category-card h3 {
@@ -493,7 +539,7 @@ button:hover {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--input-bg);
   color: var(--text);
   padding: 12px 14px;
   outline: none;
@@ -503,8 +549,8 @@ button:hover {
 .pickup-form select:focus,
 .pickup-form textarea:focus,
 .table-tools input:focus {
-  border-color: rgba(110, 231, 200, 0.4);
-  box-shadow: 0 0 0 4px rgba(110, 231, 200, 0.08);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus);
 }
 
 .table-section {
@@ -529,7 +575,7 @@ thead th {
   font-size: 0.86rem;
   font-weight: 600;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-raised);
   padding: 18px 18px;
   border-bottom: 1px solid var(--line);
 }
@@ -558,31 +604,31 @@ tbody tr:last-child td {
 }
 
 .status-tag.pending {
-  background: rgba(247, 213, 107, 0.08);
+  background: var(--wash);
   color: var(--warning);
-  border: 1px solid rgba(247, 213, 107, 0.2);
+  border: 1px solid var(--line);
 }
 
 .status-tag.approved,
 .status-tag.collected,
 .status-tag.completed {
-  background: rgba(163, 247, 182, 0.08);
+  background: var(--wash);
   color: var(--success);
-  border: 1px solid rgba(163, 247, 182, 0.2);
+  border: 1px solid var(--line);
 }
 
 .status-tag.rejected,
 .status-tag.cancelled,
 .status-tag.failed {
-  background: rgba(255, 125, 125, 0.08);
+  background: var(--wash);
   color: var(--danger);
-  border: 1px solid rgba(255, 125, 125, 0.24);
+  border: 1px solid var(--line);
 }
 
 .status-tag.scheduled {
-  background: rgba(139, 184, 255, 0.08);
+  background: var(--wash);
   color: var(--accent);
-  border: 1px solid rgba(139, 184, 255, 0.2);
+  border: 1px solid var(--line);
 }
 
 .centers-section {
@@ -596,7 +642,7 @@ tbody tr:last-child td {
 }
 
 .center-card {
-  background: linear-gradient(180deg, rgba(17, 34, 42, 0.95), rgba(9, 20, 27, 0.8));
+  background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 22px;
   padding: 20px;
@@ -617,8 +663,8 @@ tbody tr:last-child td {
   display: grid;
   place-items: center;
   font-size: 1.25rem;
-  background: linear-gradient(135deg, rgba(110, 231, 200, 0.18), rgba(139, 184, 255, 0.1));
-  border: 1px solid rgba(110, 231, 200, 0.2);
+  background: var(--wash-strong);
+  border: 1px solid var(--line);
 }
 
 .center-meta {

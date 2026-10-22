@@ -55,6 +55,17 @@ const requestsTableBody = document.getElementById('requestsTableBody');
 const categorySelect = document.getElementById('categorySelect');
 const requestSearch = document.getElementById('requestSearch');
 const chartBars = document.getElementById('chartBars');
+const themeToggle = document.getElementById('themeToggle');
+
+function setTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.dataset.theme = isDark ? 'dark' : 'light';
+  themeToggle.setAttribute('aria-pressed', String(isDark));
+  themeToggle.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} theme`);
+  themeToggle.querySelector('.theme-toggle-icon').textContent = isDark ? '☀' : '☾';
+  themeToggle.querySelector('.theme-toggle-label').textContent = isDark ? 'Light mode' : 'Dark mode';
+  localStorage.setItem('ecocycle-theme', isDark ? 'dark' : 'light');
+}
 
 function renderSummary() {
   totalRequests.textContent = requests.length;
@@ -137,6 +148,10 @@ requestSearch.addEventListener('input', (event) => {
   renderRequests(event.target.value);
 });
 
+themeToggle.addEventListener('click', () => {
+  setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+});
+
 document.getElementById('pickupForm').addEventListener('submit', (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -154,6 +169,8 @@ document.getElementById('pickupForm').addEventListener('submit', (event) => {
     status: 'Pending'
   });
 
+  const savedTheme = localStorage.getItem('ecocycle-theme');
+  setTheme(savedTheme === 'dark' ? 'dark' : 'light');
   renderSummary();
   renderRequests(requestSearch.value);
   form.reset();
