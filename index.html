@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoCycle | E-Waste Recycling</title>
+    <meta
+      name="description"
+      content="Premium e-waste recycling management dashboard and pickup booking experience."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar container">
+        <div class="brand-wrap">
+          <div class="brand-mark">E</div>
+          <div>
+            <span class="brand-name">EcoCycle</span>
+            <small>Smart recycling</small>
+          </div>
+        </div>
+
+        <nav class="main-nav">
+          <a href="#overview">Overview</a>
+          <a href="#categories">Categories</a>
+          <a href="#centers">Centers</a>
+          <a href="#impact">Impact</a>
+        </nav>
+
+        <div class="nav-actions">
+          <button class="ghost-btn">Login</button>
+          <button class="primary-btn">Book Pickup</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero container" id="overview">
+          <div class="hero-copy">
+            <span class="eyebrow">Sustainable waste intelligence</span>
+            <h1>Turn old electronics into new opportunities.</h1>
+            <p>
+              Manage collections, monitor recovery, and drive greener actions with a
+              premium recycling platform built for households, businesses, and centers.
+            </p>
+
+            <div class="hero-actions">
+              <button class="primary-btn large">Schedule Pickup</button>
+              <button class="secondary-btn large">See Dashboard</button>
+            </div>
+
+            <div class="hero-metrics">
+              <div>
+                <strong id="totalRequests">0</strong>
+                <span>Requests</span>
+              </div>
+              <div>
+                <strong id="totalCenters">0</strong>
+                <span>Centers</span>
+              </div>
+              <div>
+                <strong id="recoveryRate">0%</strong>
+                <span>Recovery</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual">
+            <div class="dashboard-panel glass-card">
+              <div class="panel-header">
+                <span>Live Operations</span>
+                <span class="status-pill active">Online</span>
+              </div>
+
+              <div class="mini-grid">
+                <div class="mini-card accent">
+                  <small>Pickup rate</small>
+                  <strong>92%</strong>
+                </div>
+                <div class="mini-card">
+                  <small>Collected</small>
+                  <strong id="collectedCount">0</strong>
+                </div>
+                <div class="mini-card wide">
+                  <small>Recycled weight</small>
+                  <strong id="recycledWeight">0 kg</strong>
+                </div>
+              </div>
+
+              <div class="chart-block">
+                <div class="chart-bars" id="chartBars"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stats-strip container">
+          <div class="stat-card glass-card">
+            <span class="label">Active collections</span>
+            <strong id="activeCollections">0</strong>
+          </div>
+          <div class="stat-card glass-card">
+            <span class="label">Recovered materials</span>
+            <strong id="materialsRecovered">0</strong>
+          </div>
+          <div class="stat-card glass-card">
+            <span class="label">CO₂ avoided</span>
+            <strong>1.8T</strong>
+          </div>
+          <div class="stat-card glass-card">
+            <span class="label">Avg. turnaround</span>
+            <strong>3.4 days</strong>
+          </div>
+        </section>
+
+        <section class="content-grid container" id="categories">
+          <div class="panel-section">
+            <div class="section-topline">
+              <div>
+                <span class="eyebrow small">Recycling categories</span>
+                <h2>Popular waste streams</h2>
+              </div>
+              <a href="#" class="view-link">View all</a>
+            </div>
+            <div id="categoriesGrid" class="categories-grid"></div>
+          </div>
+
+          <aside class="panel-section form-panel">
+            <div class="section-topline compact">
+              <div>
+                <span class="eyebrow small">Request pickup</span>
+                <h2>Book a collection</h2>
+              </div>
+            </div>
+
+            <form class="pickup-form" id="pickupForm">
+              <label>
+                Full name
+                <input type="text" value="Rahul Sharma" />
+              </label>
+              <label>
+                Email address
+                <input type="email" value="rahul@example.com" />
+              </label>
+              <label>
+                Waste category
+                <select id="categorySelect"></select>
+              </label>
+              <label>
+                Pickup date
+                <input type="date" value="2026-10-20" />
+              </label>
+              <label>
+                Pickup address
+                <textarea rows="3">Jaipur, Rajasthan</textarea>
+              </label>
+              <button type="submit" class="primary-btn wide">Submit request</button>
+            </form>
+          </aside>
+        </section>
+
+        <section class="container table-section" id="impact">
+          <div class="section-topline">
+            <div>
+              <span class="eyebrow small">Operational dashboard</span>
+              <h2>Recent collection requests</h2>
+            </div>
+            <div class="table-tools">
+              <input id="requestSearch" type="search" placeholder="Search customer or item" />
+            </div>
+          </div>
+
+          <div class="table-wrap glass-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>User</th>
+                  <th>Category</th>
+                  <th>Pickup Date</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="container centers-section" id="centers">
+          <div class="section-topline">
+            <div>
+              <span class="eyebrow small">Recovery network</span>
+              <h2>Recycling centers</h2>
+            </div>
+          </div>
+
+          <div id="centersGrid" class="centers-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
