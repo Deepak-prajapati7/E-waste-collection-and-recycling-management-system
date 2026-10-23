@@ -193,8 +193,7 @@ function getCenterCoordinates(element) {
 function renderCenters(origin) {
   centersGrid.innerHTML = nearbyCenters.map((center) => {
     const tags = center.tags;
-    const address = [
-      tags['addr:full'],
+    const address = tags['addr:full'] || [
       [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '),
       tags['addr:place'],
       tags['addr:suburb'],
@@ -202,6 +201,11 @@ function renderCenters(origin) {
       tags['addr:postcode']
     ].filter(Boolean).join(', ');
     const isElectronicsShop = Boolean(tags.shop);
+    const isScrapYard = tags.amenity === 'scrap_yard';
+    const isListedRecyclingPoint = tags.amenity === 'recycling';
+    const centerName = tags.name || tags.operator || (
+      isElectronicsShop ? 'Electronics shop' : isScrapYard ? 'Scrap yard' : 'E-waste recycling point'
+    );
     const phone = tags['contact:phone'] || tags.phone;
     const phoneLink = phone ? phone.replace(/[^\d+]/g, '') : '';
     const osmUrl = `https://www.openstreetmap.org/${encodeURIComponent(center.type)}/${encodeURIComponent(center.id)}`;
@@ -211,16 +215,16 @@ function renderCenters(origin) {
     return `
       <article class="center-card">
         <div class="center-top">
-          <div class="center-badge">${isElectronicsShop ? 'SHOP' : 'RECYCLING'}</div>
+          <div class="center-badge">${isElectronicsShop ? 'SHOP' : isScrapYard ? 'SCRAP YARD' : 'RECYCLING'}</div>
           <span class="center-distance">${formatDistance(distance)}</span>
         </div>
         <div class="center-meta">
-          <strong>${escapeHtml(tags.name || tags.operator || 'E-waste recycling point')}</strong>
+          <strong>${escapeHtml(centerName)}</strong>
           <span>${escapeHtml(dropoffAddress)}</span>
         </div>
         ${phone ? `<p class="center-detail">Phone: <a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>` : ''}
         ${tags.opening_hours ? `<p class="center-detail">Hours: ${escapeHtml(tags.opening_hours)}</p>` : ''}
-        <p class="center-detail">${isElectronicsShop ? 'Potential drop-off option. Contact the shop to confirm e-waste acceptance.' : 'Listed for electrical or electronic recycling in OpenStreetMap.'}</p>
+        <p class="center-detail">${isListedRecyclingPoint ? 'Listed for electrical or electronic recycling in OpenStreetMap.' : 'Potential drop-off option. Contact this location to confirm e-waste acceptance.'}</p>
         <a class="map-link" href="${osmUrl}" target="_blank" rel="noopener noreferrer">View location on OpenStreetMap <span aria-hidden="true">↗</span></a>
         ${currentUser?.role === 'user' ? `<button class="primary-btn use-location" type="button" data-location="${escapeHtml(tags.name ? `${tags.name}, ${dropoffAddress}` : dropoffAddress)}">Use for drop-off request</button>` : ''}
       </article>
@@ -372,7 +376,7 @@ async function searchCentersByCity(query) {
   locationsMessage.textContent = `Finding ${query} on the map…`;
 
   try {
-    const origin = await geocodeLocation(query, controller.signal);
+    const origin  = await geocodeLocation(query, controller.signal);
     if (controller.signal.aborted) return;
     await findNearbyCenters(origin, controller.signal);
   } catch (error) {
