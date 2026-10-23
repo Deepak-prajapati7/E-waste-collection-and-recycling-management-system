@@ -8,12 +8,6 @@
       name="description"
       content="Premium e-waste recycling management dashboard and pickup booking experience."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -23,14 +17,14 @@
           <div class="brand-mark">E</div>
           <div>
             <span class="brand-name">EcoCycle</span>
-            <small>Smart recycling</small>
+            <small>Local e-waste recycling</small>
           </div>
         </div>
 
-        <nav class="main-nav">
+        <nav class="main-nav" aria-label="Main navigation" hidden>
           <a href="#overview">Overview</a>
-          <a href="#categories">Categories</a>
-          <a href="#centers">Centers</a>
+          <a href="#categories" id="categoriesNavLink">Categories</a>
+          <a href="#centers">Drop-off shops</a>
           <a href="#impact">Impact</a>
         </nav>
 
@@ -39,87 +33,147 @@
             <span class="theme-toggle-icon" aria-hidden="true">☾</span>
             <span class="theme-toggle-label">Dark mode</span>
           </button>
-          <button class="ghost-btn">Login</button>
-          <button class="primary-btn">Book Pickup</button>
+          <span class="account-label" id="accountLabel" hidden></span>
+          <button class="ghost-btn" id="logoutButton" type="button" hidden>Sign out</button>
         </div>
       </header>
 
       <main>
+        <section class="auth-section container" id="authSection">
+          <div class="auth-intro">
+            <span class="eyebrow">A better way to recycle</span>
+            <h1>Make room for a more circular future.</h1>
+            <p>Sign in to arrange an e-waste pickup or shop drop-off, or access the operations dashboard to process collection requests.</p>
+            <div class="auth-benefits">
+              <span><strong>01</strong> Choose pickup or shop drop-off</span>
+              <span><strong>02</strong> Follow every request</span>
+              <span><strong>03</strong> Keep useful materials in circulation</span>
+            </div>
+          </div>
+
+          <div class="auth-card">
+            <div class="auth-heading">
+              <span class="eyebrow small">Welcome to EcoCycle</span>
+              <h2 id="authTitle">Sign in to your account</h2>
+              <p id="authDescription">Choose how you want to continue.</p>
+            </div>
+            <div class="auth-tabs" role="tablist" aria-label="Account access">
+              <button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true">Sign in</button>
+              <button class="auth-tab" id="signupTab" type="button" role="tab" aria-selected="false">Create account</button>
+            </div>
+            <form id="authForm" class="auth-form">
+              <label id="authNameField" hidden>
+                Full name
+                <input id="authName" name="name" type="text" autocomplete="name" placeholder="Your name" />
+              </label>
+              <label>
+                I am signing in as
+                <select id="authRole" name="role">
+                  <option value="user">User — request a pickup</option>
+                  <option value="admin">Administrator — manage requests</option>
+                </select>
+              </label>
+              <label>
+                Email address
+                <input id="authEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+              </label>
+              <label>
+                Password
+                <input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6" />
+              </label>
+              <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+              <button class="primary-btn wide" id="authSubmit" type="submit">Sign in</button>
+            </form>
+            <p class="demo-notice">Demo interface only. Sign-in is not verified by a server and does not provide real account security.</p>
+          </div>
+        </section>
+
+        <div id="dashboardContent" hidden>
         <section class="hero container" id="overview">
           <div class="hero-copy">
-            <span class="eyebrow">Sustainable waste intelligence</span>
-            <h1>Turn old electronics into new opportunities.</h1>
-            <p>
-              Manage collections, monitor recovery, and drive greener actions with a
-              premium recycling platform built for households, businesses, and centers.
+            <span class="eyebrow" id="heroEyebrow">Collection and recycling</span>
+            <h1 id="heroTitle">Recycle your old electronics responsibly.</h1>
+            <p id="heroDescription">
+              Arrange a home pickup or find a nearby drop-off shop. Follow your request
+              from handoff through processing.
             </p>
 
             <div class="hero-actions">
-              <button class="primary-btn large">Schedule Pickup</button>
-              <button class="secondary-btn large">See Dashboard</button>
+              <a class="primary-btn large" id="heroPrimaryAction" href="#pickup">Arrange a collection</a>
+              <a class="secondary-btn large" id="heroSecondaryAction" href="#centers">Find a drop-off shop</a>
             </div>
 
             <div class="hero-metrics">
               <div>
                 <strong id="totalRequests">0</strong>
-                <span>Requests</span>
+                <span>Your requests</span>
               </div>
               <div>
                 <strong id="totalCenters">0</strong>
-                <span>Centers</span>
+                <span>Mapped drop-off points</span>
               </div>
               <div>
-                <strong id="recoveryRate">0%</strong>
-                <span>Recovery</span>
+                <strong id="totalCategories">0</strong>
+                <span>Accepted categories</span>
               </div>
             </div>
           </div>
 
           <div class="hero-visual">
-            <div class="dashboard-panel glass-card">
-              <div class="panel-header">
-                <span>Live Operations</span>
-                <span class="status-pill active">Online</span>
-              </div>
-
-              <div class="mini-grid">
-                <div class="mini-card accent">
-                  <small>Pickup rate</small>
-                  <strong>92%</strong>
-                </div>
-                <div class="mini-card">
-                  <small>Collected</small>
-                  <strong id="collectedCount">0</strong>
-                </div>
-                <div class="mini-card wide">
-                  <small>Recycled weight</small>
-                  <strong id="recycledWeight">0 kg</strong>
-                </div>
-              </div>
-
-              <div class="chart-block">
-                <div class="chart-bars" id="chartBars"></div>
-              </div>
+            <div class="process-card">
+              <span class="eyebrow small">How it works</span>
+              <h2>From old device to responsible recycling</h2>
+              <ol class="process-list">
+                <li>Choose the electronics you want to recycle.</li>
+                <li>Book a pickup or select a drop-off shop.</li>
+                <li>Track the request as the shop receives and processes it.</li>
+              </ol>
             </div>
+            <aside class="admin-hero-panel" id="adminHeroPanel" aria-label="Today's operations" hidden>
+              <div class="admin-hero-panel-top">
+                <span class="admin-live-indicator"><span aria-hidden="true"></span> Live overview</span>
+                <span class="admin-hero-mark" aria-hidden="true">EC</span>
+              </div>
+              <p class="admin-hero-date" id="adminHeroDate"></p>
+              <h2>Your next collection starts here.</h2>
+              <p class="admin-hero-copy">Stay on top of new requests and keep every device moving toward responsible recycling.</p>
+              <a href="#impact" class="admin-focus-link">
+                <span class="admin-focus-count" id="adminHeroPendingCount">0</span>
+                <span><strong>Requests need review</strong><small>Open the request queue <span aria-hidden="true">→</span></small></span>
+              </a>
+            </aside>
           </div>
         </section>
 
-        <section class="stats-strip container">
-          <div class="stat-card glass-card">
-            <span class="label">Active collections</span>
-            <strong id="activeCollections">0</strong>
+        <section class="admin-overview container" id="adminOverview" aria-label="Request overview" hidden>
+          <div class="admin-overview-heading">
+            <div>
+              <span class="eyebrow small">Operations snapshot</span>
+              <h2>Collection requests at a glance</h2>
+            </div>
+            <a class="admin-overview-link" href="#impact">Review all requests <span aria-hidden="true">→</span></a>
           </div>
-          <div class="stat-card glass-card">
-            <span class="label">Recovered materials</span>
-            <strong id="materialsRecovered">0</strong>
-          </div>
-          <div class="stat-card glass-card">
-            <span class="label">CO₂ avoided</span>
-            <strong>1.8T</strong>
-          </div>
-          <div class="stat-card glass-card">
-            <span class="label">Avg. turnaround</span>
-            <strong>3.4 days</strong>
+          <div class="admin-stats-grid">
+            <article class="admin-stat-card">
+              <span class="admin-stat-icon total" aria-hidden="true">ALL</span>
+              <div><span class="admin-stat-label">Total requests</span><strong id="adminTotalRequests">0</strong></div>
+              <span class="admin-stat-note">All collection activity</span>
+            </article>
+            <article class="admin-stat-card">
+              <span class="admin-stat-icon pending" aria-hidden="true">NEW</span>
+              <div><span class="admin-stat-label">Needs review</span><strong id="adminPendingRequests">0</strong></div>
+              <span class="admin-stat-note">Waiting for a decision</span>
+            </article>
+            <article class="admin-stat-card">
+              <span class="admin-stat-icon progress" aria-hidden="true">LIVE</span>
+              <div><span class="admin-stat-label">In progress</span><strong id="adminInProgressRequests">0</strong></div>
+              <span class="admin-stat-note">Approved through processing</span>
+            </article>
+            <article class="admin-stat-card">
+              <span class="admin-stat-icon completed" aria-hidden="true">DONE</span>
+              <div><span class="admin-stat-label">Completed</span><strong id="adminCompletedRequests">0</strong></div>
+              <span class="admin-stat-note">Successfully recycled</span>
+            </article>
           </div>
         </section>
 
@@ -127,44 +181,56 @@
           <div class="panel-section">
             <div class="section-topline">
               <div>
-                <span class="eyebrow small">Recycling categories</span>
-                <h2>Popular waste streams</h2>
+                <span class="eyebrow small">What you can recycle</span>
+                <h2>Accepted electronics</h2>
               </div>
-              <a href="#" class="view-link">View all</a>
             </div>
             <div id="categoriesGrid" class="categories-grid"></div>
           </div>
 
-          <aside class="panel-section form-panel">
+          <aside class="panel-section form-panel" id="pickup">
             <div class="section-topline compact">
               <div>
-                <span class="eyebrow small">Request pickup</span>
-                <h2>Book a collection</h2>
+                <span class="eyebrow small">Choose how to recycle</span>
+                <h2>Arrange a collection</h2>
               </div>
             </div>
 
             <form class="pickup-form" id="pickupForm">
-              <label>
+              <label id="pickupNameField">
                 Full name
-                <input type="text" value="Rahul Sharma" />
+                <input id="pickupName" name="name" type="text" autocomplete="name" required />
               </label>
-              <label>
+              <label id="pickupEmailField">
                 Email address
-                <input type="email" value="rahul@example.com" />
+                <input id="pickupEmail" name="email" type="email" autocomplete="email" required />
               </label>
               <label>
                 Waste category
-                <select id="categorySelect"></select>
+                <select id="categorySelect" name="category"></select>
               </label>
               <label>
-                Pickup date
-                <input type="date" value="2026-10-20" />
+                Collection method
+                <select id="deliveryMethod" name="method">
+                  <option value="pickup">Request a home pickup</option>
+                  <option value="dropoff">Drop off at a shop</option>
+                </select>
               </label>
               <label>
+                <span id="collectionDateLabel">Pickup date</span>
+                <input id="pickupDate" name="pickupDate" type="date" required />
+              </label>
+              <label id="pickupAddressField">
                 Pickup address
-                <textarea rows="3">Jaipur, Rajasthan</textarea>
+                <textarea id="pickupAddress" name="address" rows="3" autocomplete="street-address" required></textarea>
               </label>
-              <button type="submit" class="primary-btn wide">Submit request</button>
+              <label id="dropoffLocationField" hidden>
+                Shop name and address
+                <input id="dropoffLocation" name="dropoffLocation" type="text" autocomplete="street-address" placeholder="Enter the shop you plan to visit" />
+                <span class="field-hint">Find a nearby shop in the directory below, then enter its name and address.</span>
+              </label>
+              <p class="form-message" id="pickupMessage" role="status" aria-live="polite"></p>
+              <button type="submit" class="primary-btn wide">Submit collection request</button>
             </form>
           </aside>
         </section>
@@ -173,10 +239,24 @@
           <div class="section-topline">
             <div>
               <span class="eyebrow small">Operational dashboard</span>
-              <h2>Recent collection requests</h2>
+              <h2 id="requestsTitle">Recent collection requests</h2>
             </div>
-            <div class="table-tools">
-              <input id="requestSearch" type="search" placeholder="Search customer or item" />
+            <div class="request-toolbar">
+              <span class="request-count" id="requestCount" aria-live="polite"></span>
+              <label class="sr-only" for="adminStatusFilter">Filter requests by status</label>
+              <select class="request-filter" id="adminStatusFilter" hidden>
+                <option value="all">All statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Collected">Collected</option>
+                <option value="Processing">Processing</option>
+                <option value="Completed">Completed</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <div class="table-tools">
+                <input id="requestSearch" type="search" placeholder="Search customer or item" />
+              </div>
             </div>
           </div>
 
@@ -187,26 +267,38 @@
                   <th>Request ID</th>
                   <th>User</th>
                   <th>Category</th>
-                  <th>Pickup Date</th>
-                  <th>Address</th>
+                  <th>Method</th>
+                  <th>Date</th>
+                  <th>Shop or address</th>
                   <th>Status</th>
+                  <th id="actionsHeading" hidden>Manage</th>
                 </tr>
               </thead>
               <tbody id="requestsTableBody"></tbody>
             </table>
           </div>
+          <p class="dashboard-message" id="dashboardMessage" role="status" aria-live="polite"></p>
         </section>
 
         <section class="container centers-section" id="centers">
           <div class="section-topline">
             <div>
-              <span class="eyebrow small">Recovery network</span>
-              <h2>Recycling centers</h2>
+              <span class="eyebrow small">Find a safe drop-off point</span>
+              <h2>E-waste drop-off points near you</h2>
             </div>
+            <form class="directory-actions" id="locationSearchForm">
+              <label class="sr-only" for="locationSearch">City or postcode in India</label>
+              <input id="locationSearch" type="search" placeholder="Enter city or postcode" aria-label="City or postcode in India" required />
+              <button class="primary-btn" id="searchLocationsButton" type="submit">Search</button>
+              <button class="secondary-btn" id="findNearbyButton" type="button">Use my location</button>
+            </form>
           </div>
 
           <div id="centersGrid" class="centers-grid"></div>
+          <p class="locations-message" id="locationsMessage" role="status" aria-live="polite">Search an Indian city or postcode, or use your device location to find nearby e-waste recycling points.</p>
+          <p class="locations-notice">Locations are sourced from OpenStreetMap and may be incomplete. Your city or postcode, or your coordinates when you choose “Use my location,” are sent to OpenStreetMap to search nearby. Call ahead to confirm e-waste acceptance, item requirements, and opening hours. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>.</p>
         </section>
+        </div>
       </main>
     </div>
 

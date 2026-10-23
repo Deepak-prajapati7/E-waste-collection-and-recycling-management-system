@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS Collection_Requests (
     user_id INT NOT NULL,
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     pickup_date DATE,
+    collection_method ENUM('Pickup', 'Drop-off') NOT NULL DEFAULT 'Pickup',
     address VARCHAR(255) NOT NULL,
     status ENUM(
         'Pending',
@@ -71,6 +72,7 @@ CREATE TABLE IF NOT EXISTS Collection_Requests (
         'Rejected',
         'Scheduled',
         'Collected',
+        'Processing',
         'Completed',
         'Cancelled'
     ) DEFAULT 'Pending',
@@ -216,7 +218,15 @@ VALUES
 ('Batteries', 'Electronic device batteries'),
 ('Televisions', 'Old LCD and LED televisions'),
 ('Printers', 'Printers and scanners'),
-('Cables', 'Electronic wires and cables')
+('Cables', 'Electronic wires and cables'),
+('Game consoles', 'Gaming consoles, controllers, and handheld gaming devices'),
+('Audio equipment', 'Speakers, headphones, radios, and stereo equipment'),
+('Cameras', 'Digital cameras, camcorders, lenses, and related accessories'),
+('Small appliances', 'Small electric kitchen, grooming, and household appliances'),
+('Networking equipment', 'Routers, modems, switches, and network accessories'),
+('Wearables', 'Smartwatches, fitness trackers, and other electronic wearables'),
+('Lamps and lighting', 'LED lamps and electronic lighting'),
+('Other small electronics', 'Calculators, toys, power banks, and other small electronic devices')
 
 ON DUPLICATE KEY UPDATE
     description = VALUES(description);
