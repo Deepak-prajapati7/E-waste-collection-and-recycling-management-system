@@ -9,7 +9,7 @@ A browser-based dashboard concept for organizing electronic-waste pickup request
 - User home-pickup and shop drop-off requests with a personal request-status list.
 - Administrator request review, status updates through processing, search, and record deletion.
 - Fourteen e-waste categories, including consoles, small appliances, cameras, and wearables.
-- Live e-waste recycling point searches from OpenStreetMap by Indian city, postcode, or device location.
+- Live searches for mapped e-waste recycling points and nearby electronics shops from OpenStreetMap by Indian city, postcode, or device location. Shop listings are potential drop-off options; users should confirm acceptance directly.
 - Demo requests, including the selected shop or pickup address, saved in browser storage.
 - MySQL schema and sample data for the core recycling workflow.
 

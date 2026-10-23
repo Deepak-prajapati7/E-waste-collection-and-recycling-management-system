@@ -194,21 +194,24 @@ function renderCenters(origin) {
   centersGrid.innerHTML = nearbyCenters.map((center) => {
     const tags = center.tags;
     const address = [
+      tags['addr:full'],
       [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' '),
+      tags['addr:place'],
       tags['addr:suburb'],
       tags['addr:city'],
       tags['addr:postcode']
     ].filter(Boolean).join(', ');
+    const isElectronicsShop = Boolean(tags.shop);
     const phone = tags['contact:phone'] || tags.phone;
     const phoneLink = phone ? phone.replace(/[^\d+]/g, '') : '';
     const osmUrl = `https://www.openstreetmap.org/${encodeURIComponent(center.type)}/${encodeURIComponent(center.id)}`;
     const distance = distanceBetween(origin.latitude, origin.longitude, center.latitude, center.longitude);
-    const dropoffAddress = address || center.locationLabel;
+    const dropoffAddress = address || `Near ${center.locationLabel}`;
 
     return `
       <article class="center-card">
         <div class="center-top">
-          <div class="center-badge" aria-hidden="true">E-WASTE</div>
+          <div class="center-badge">${isElectronicsShop ? 'SHOP' : 'RECYCLING'}</div>
           <span class="center-distance">${formatDistance(distance)}</span>
         </div>
         <div class="center-meta">
@@ -217,7 +220,7 @@ function renderCenters(origin) {
         </div>
         ${phone ? `<p class="center-detail">Phone: <a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>` : ''}
         ${tags.opening_hours ? `<p class="center-detail">Hours: ${escapeHtml(tags.opening_hours)}</p>` : ''}
-        <p class="center-detail">Listed for electrical or electronic recycling in OpenStreetMap.</p>
+        <p class="center-detail">${isElectronicsShop ? 'Potential drop-off option. Contact the shop to confirm e-waste acceptance.' : 'Listed for electrical or electronic recycling in OpenStreetMap.'}</p>
         <a class="map-link" href="${osmUrl}" target="_blank" rel="noopener noreferrer">View location on OpenStreetMap <span aria-hidden="true">↗</span></a>
         ${currentUser?.role === 'user' ? `<button class="primary-btn use-location" type="button" data-location="${escapeHtml(tags.name ? `${tags.name}, ${dropoffAddress}` : dropoffAddress)}">Use for drop-off request</button>` : ''}
       </article>
@@ -269,19 +272,22 @@ async function geocodeLocation(query, signal) {
 }
 
 async function findNearbyCenters(origin, signal) {
-  const radius = 15000;
+  const radius = 25000;
   const electricalRecyclingTags = [
     'recycling:electrical_appliances',
+    'recycling:electrical',
     'recycling:electrical_items',
     'recycling:electronics',
     'recycling:small_appliances',
     'recycling:computer',
     'recycling:mobile_phones'
   ];
-  const searches = electricalRecyclingTags.map((tag) =>
+  const recyclingSearches = electricalRecyclingTags.map((tag) =>
     `  nwr(around:${radius},${origin.latitude},${origin.longitude})["amenity"="recycling"]["${tag}"~"^(yes|only|limited|separate)$",i];`
   ).join('\n');
-  const query = `[out:json][timeout:25];\n(\n${searches}\n);\nout tags center;`;
+  const shopSearch = `  nwr(around:${radius},${origin.latitude},${origin.longitude})["shop"~"^(electronics|electrical|computer|mobile_phone)$",i];`;
+  const scrapYardSearch = `  nwr(around:${radius},${origin.latitude},${origin.longitude})["amenity"="scrap_yard"];`;
+  const query = `[out:json][timeout:25];\n(\n${recyclingSearches}\n${shopSearch}\n${scrapYardSearch}\n);\nout tags center;`;
   const response = await fetch(overpassEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
@@ -319,8 +325,8 @@ async function findNearbyCenters(origin, signal) {
   renderCenters(origin);
   if (currentUser) renderSummary();
   locationsMessage.textContent = nearbyCenters.length
-    ? `${nearbyCenters.length} mapped e-waste recycling point${nearbyCenters.length === 1 ? '' : 's'} found within 15 km of ${origin.label}.`
-    : `No mapped e-waste recycling points were found within 15 km of ${origin.label}.`;
+    ? `${nearbyCenters.length} nearby electronics shop${nearbyCenters.length === 1 ? '' : 's'} or mapped recycling point${nearbyCenters.length === 1 ? '' : 's'} found within 25 km of ${origin.label}. Confirm e-waste acceptance with each shop.`
+    : `No electronics shops or mapped e-waste recycling points were found within 25 km of ${origin.label}. Try a nearby city or a larger town.`;
 }
 
 function setLocationSearchBusy(isBusy) {
