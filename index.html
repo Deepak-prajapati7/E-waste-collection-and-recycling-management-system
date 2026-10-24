@@ -1,348 +1,697 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EcoCycle | E-Waste Recycling</title>
+    <title>EcoCycle – E-waste collection and recycling</title>
     <meta
       name="description"
-      content="Premium e-waste recycling management dashboard and pickup booking experience."
+      content="Request e-waste pickups, find recycling points on a map, and manage collection requests."
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="Assest/logo.jpeg" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
-  <body>
-    <div class="page-shell">
-      <header class="topbar container">
-        <div class="brand-wrap">
-          <div class="brand-mark">
-            <img src="Assest/logo.jpeg" alt="EcoCycle logo" />
-          </div>
-          <div>
-            <span class="brand-name">EcoCycle</span>
-            <small>Local e-waste recycling</small>
-          </div>
+  <body data-theme="light">
+    <!-- Icon sprite -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      style="display: none"
+      aria-hidden="true"
+    >
+      <symbol id="i-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 24 24">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24">
+        <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </symbol>
+      <symbol id="i-box" viewBox="0 0 24 24">
+        <path d="M21 8l-9-5-9 5 9 5 9-5z" />
+        <path d="M3 8v8l9 5 9-5V8M12 13v8" />
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24">
+        <path d="M4 4h6a3 3 0 013 3v13a2 2 0 00-2-2H4V4z" />
+        <path d="M20 4h-6a3 3 0 00-3 3v13a2 2 0 012-2h7V4z" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path
+          d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+        />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24">
+        <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+      </symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path
+          d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+        />
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path
+          d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"
+        />
+      </symbol>
+      <symbol id="i-locate" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3" />
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      </symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24">
+        <path
+          d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"
+        />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M3 6h18M3 12h18M3 18h18" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="M20 6L9 17l-5-5" />
+      </symbol>
+      <symbol id="i-external" viewBox="0 0 24 24">
+        <path
+          d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"
+        />
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path
+          d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4M12 17h.01"
+        />
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 00-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24">
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" />
+      </symbol>
+      <symbol id="i-recycle" viewBox="0 0 24 24">
+        <path d="M7.2 7.4 9.4 3.8a2 2 0 013.4 0l1.1 1.8M17.1 8h2.3a2 2 0 011.7 3l-1.7 3M15.2 18h-4.5l-1.2 2M5 16.1l-1.2-2.1a2 2 0 011.7-3h2" />
+        <path d="m13.4 3.5.5 3-3-.4M21 11l-2.8-1.3.5 3M8 20l.2-3-2.8 1" />
+      </symbol>
+    </svg>
+
+    <!-- ============ Sign in ============ -->
+    <div class="auth" id="auth">
+      <section class="auth-brand">
+        <div class="brand">
+          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" /></span>
+          <span class="brand-text"
+            ><strong>EcoCycle</strong
+            ><small>E-waste collection and recycling</small></span
+          >
         </div>
-
-        <nav class="main-nav" aria-label="Main navigation" hidden>
-          <a href="#overview">Overview</a>
-          <a href="#categories" id="categoriesNavLink">Categories</a>
-          <a href="#sop">Recycling SOP</a>
-          <a href="#centers">Drop-off shops</a>
-          <a href="#impact">Impact</a>
-        </nav>
-
-        <div class="nav-actions">
-          <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
-            <span class="theme-toggle-icon" aria-hidden="true">☾</span>
-            <span class="theme-toggle-label">Dark mode</span>
-          </button>
-          <span class="account-label" id="accountLabel" hidden></span>
-          <button class="ghost-btn" id="logoutButton" type="button" hidden>Sign out</button>
+        <div class="auth-brand-body">
+          <h1>Collection requests, from booking to recovery.</h1>
+          <ul class="auth-points">
+            <li>Book a home pickup or choose a drop-off point</li>
+            <li>Find recycling points and electronics shops on a map</li>
+            <li>Track each request through collection and processing</li>
+          </ul>
         </div>
-      </header>
+        <p class="auth-foot">
+          Prototype build. Data is stored in this browser only.
+        </p>
+      </section>
 
-      <main>
-        <section class="auth-section container" id="authSection">
-          <div class="auth-intro">
-            <span class="eyebrow">A better way to recycle</span>
-            <h1>Make room for a more circular future.</h1>
-            <p>Sign in to arrange an e-waste pickup or shop drop-off, or access the operations dashboard to process collection requests.</p>
-            <div class="auth-benefits">
-              <span><strong>01</strong> Choose pickup or shop drop-off</span>
-              <span><strong>02</strong> Follow every request</span>
-              <span><strong>03</strong> Keep useful materials in circulation</span>
-            </div>
+      <section class="auth-form-wrap">
+        <div class="auth-card">
+          <h2 id="authTitle">Sign in</h2>
+          <p class="auth-sub" id="authDescription">
+            Use your account to continue.
+          </p>
+
+          <div class="tabs" role="tablist" aria-label="Account access">
+            <button
+              class="tab is-active"
+              id="loginTab"
+              type="button"
+              role="tab"
+              aria-selected="true"
+            >
+              Sign in
+            </button>
+            <button
+              class="tab"
+              id="signupTab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+            >
+              Create account
+            </button>
           </div>
 
-          <div class="auth-card">
-            <div class="auth-heading">
-              <span class="eyebrow small">Welcome to EcoCycle</span>
-              <h2 id="authTitle">Sign in to your account</h2>
-              <p id="authDescription">Choose how you want to continue.</p>
+          <form id="authForm" class="form" novalidate>
+            <div class="field" id="authNameField" hidden>
+              <label for="authName">Full name</label>
+              <input id="authName" type="text" autocomplete="name" />
             </div>
-            <div class="auth-tabs" role="tablist" aria-label="Account access">
-              <button class="auth-tab active" id="loginTab" type="button" role="tab" aria-selected="true">Sign in</button>
-              <button class="auth-tab" id="signupTab" type="button" role="tab" aria-selected="false">Create account</button>
-            </div>
-            <form id="authForm" class="auth-form">
-              <label id="authNameField" hidden>
-                Full name
-                <input id="authName" name="name" type="text" autocomplete="name" placeholder="Your name" />
-              </label>
-              <label>
-                I am signing in as
-                <select id="authRole" name="role">
-                  <option value="user">User — request a pickup</option>
-                  <option value="admin">Administrator — manage requests</option>
-                </select>
-              </label>
-              <label>
-                Email address
-                <input id="authEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
-              </label>
-              <label>
-                Password
-                <input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6" />
-              </label>
-              <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
-              <button class="primary-btn wide" id="authSubmit" type="submit">Sign in</button>
-            </form>
-            <p class="demo-notice">Demo interface only. Sign-in is not verified by a server and does not provide real account security.</p>
-          </div>
-        </section>
-
-        <div id="dashboardContent" hidden>
-        <section class="hero container" id="overview">
-          <div class="hero-copy">
-            <span class="eyebrow" id="heroEyebrow">Collection and recycling</span>
-            <h1 id="heroTitle">Recycle your old electronics responsibly.</h1>
-            <p id="heroDescription">
-              Arrange a home pickup or find a nearby drop-off shop. Follow your request
-              from handoff through processing.
-            </p>
-
-            <div class="hero-actions">
-              <a class="primary-btn large" id="heroPrimaryAction" href="#pickup">Arrange a collection</a>
-              <a class="secondary-btn large" id="heroSecondaryAction" href="#centers">Find a drop-off shop</a>
-            </div>
-
-            <div class="hero-metrics">
-              <div>
-                <strong id="totalRequests">0</strong>
-                <span>Your requests</span>
-              </div>
-              <div>
-                <strong id="totalCenters">0</strong>
-                <span>Mapped drop-off points</span>
-              </div>
-              <div>
-                <strong id="totalCategories">0</strong>
-                <span>Accepted categories</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="hero-visual">
-            <div class="process-card">
-              <span class="eyebrow small">How it works</span>
-              <h2>From old device to responsible recycling</h2>
-              <ol class="process-list">
-                <li>Choose the electronics you want to recycle.</li>
-                <li>Book a pickup or select a drop-off shop.</li>
-                <li>Track the request as the shop receives and processes it.</li>
-              </ol>
-            </div>
-            <aside class="admin-hero-panel" id="adminHeroPanel" aria-label="Pending collection requests" hidden>
-              <div class="admin-hero-panel-top">
-                <span class="admin-queue-label">Needs review</span>
-                <time class="admin-hero-date" id="adminHeroDate"></time>
-              </div>
-              <h2>Pending requests</h2>
-              <p class="admin-hero-copy">New collection requests awaiting review.</p>
-              <a href="#impact" class="admin-focus-link">
-                <span class="admin-focus-count" id="adminHeroPendingCount">0</span>
-                <span><strong>Open request queue</strong><small>View and update requests</small></span>
-              </a>
-            </aside>
-          </div>
-        </section>
-
-        <section class="admin-overview container" id="adminOverview" aria-label="Request overview" hidden>
-          <div class="admin-overview-heading">
-            <div>
-              <span class="eyebrow small">Request summary</span>
-              <h2>Collection requests</h2>
-            </div>
-            <a class="admin-overview-link" href="#impact">Open request queue <span aria-hidden="true">→</span></a>
-          </div>
-          <div class="admin-stats-grid">
-            <article class="admin-stat-card">
-              <div><span class="admin-stat-label">Total requests</span><strong id="adminTotalRequests">0</strong></div>
-              <span class="admin-stat-note">All submitted requests</span>
-            </article>
-            <article class="admin-stat-card">
-              <div><span class="admin-stat-label">Pending</span><strong id="adminPendingRequests">0</strong></div>
-              <span class="admin-stat-note">Awaiting review</span>
-            </article>
-            <article class="admin-stat-card">
-              <div><span class="admin-stat-label">In progress</span><strong id="adminInProgressRequests">0</strong></div>
-              <span class="admin-stat-note">Approved through processing</span>
-            </article>
-            <article class="admin-stat-card">
-              <div><span class="admin-stat-label">Completed</span><strong id="adminCompletedRequests">0</strong></div>
-              <span class="admin-stat-note">Successfully recycled</span>
-            </article>
-          </div>
-        </section>
-
-        <section class="content-grid container" id="categories">
-          <div class="panel-section">
-            <div class="section-topline">
-              <div>
-                <span class="eyebrow small">What you can recycle</span>
-                <h2>Accepted electronics</h2>
-              </div>
-            </div>
-            <div id="categoriesGrid" class="categories-grid"></div>
-          </div>
-
-          <aside class="panel-section form-panel" id="pickup">
-            <div class="section-topline compact">
-              <div>
-                <span class="eyebrow small">Choose how to recycle</span>
-                <h2>Arrange a collection</h2>
-              </div>
-            </div>
-
-            <form class="pickup-form" id="pickupForm">
-              <label id="pickupNameField">
-                Full name
-                <input id="pickupName" name="name" type="text" autocomplete="name" required />
-              </label>
-              <label id="pickupEmailField">
-                Email address
-                <input id="pickupEmail" name="email" type="email" autocomplete="email" required />
-              </label>
-              <label>
-                Waste category
-                <select id="categorySelect" name="category"></select>
-              </label>
-              <label>
-                Collection method
-                <select id="deliveryMethod" name="method">
-                  <option value="pickup">Request a home pickup</option>
-                  <option value="dropoff">Drop off at a shop</option>
-                </select>
-              </label>
-              <label>
-                <span id="collectionDateLabel">Pickup date</span>
-                <input id="pickupDate" name="pickupDate" type="date" required />
-              </label>
-              <label id="pickupAddressField">
-                Pickup address
-                <textarea id="pickupAddress" name="address" rows="3" autocomplete="street-address" required></textarea>
-              </label>
-              <label id="dropoffLocationField" hidden>
-                Shop name and address
-                <input id="dropoffLocation" name="dropoffLocation" type="text" autocomplete="street-address" placeholder="Enter the shop you plan to visit" />
-                <span class="field-hint">Find a nearby shop in the directory below, then enter its name and address.</span>
-              </label>
-              <p class="form-message" id="pickupMessage" role="status" aria-live="polite"></p>
-              <button type="submit" class="primary-btn wide">Submit collection request</button>
-            </form>
-          </aside>
-        </section>
-
-        <section class="container sop-section" id="sop" aria-labelledby="sopTitle">
-          <div class="section-topline">
-            <div>
-              <span class="eyebrow small">Safe recycling procedure</span>
-              <h2 id="sopTitle">Recycling SOP</h2>
-              <p class="sop-intro">Follow these steps to prepare e-waste for safe collection and responsible processing.</p>
-            </div>
-          </div>
-
-          <ol class="sop-steps">
-            <li class="sop-step">
-              <span class="sop-step-number" aria-hidden="true">01</span>
-              <div>
-                <h3>Prepare your device</h3>
-                <p>Back up your files, sign out of accounts, and erase personal data when possible. Remove SIM and memory cards.</p>
-              </div>
-            </li>
-            <li class="sop-step">
-              <span class="sop-step-number" aria-hidden="true">02</span>
-              <div>
-                <h3>Keep items safe</h3>
-                <p>Keep devices dry and intact. Do not open electronics or remove built-in batteries; follow the recycler’s instructions for loose batteries.</p>
-              </div>
-            </li>
-            <li class="sop-step">
-              <span class="sop-step-number" aria-hidden="true">03</span>
-              <div>
-                <h3>Arrange a handover</h3>
-                <p>Submit a pickup or drop-off request and confirm the location accepts your items before taking them there.</p>
-              </div>
-            </li>
-            <li class="sop-step">
-              <span class="sop-step-number" aria-hidden="true">04</span>
-              <div>
-                <h3>Use authorized processing</h3>
-                <p>Items should be assessed for reuse or repair, then processed by an appropriate recycler to recover materials and manage residues.</p>
-              </div>
-            </li>
-          </ol>
-
-          <p class="sop-safety-note"><strong>Safety first:</strong> If a battery is swollen, hot, leaking, or damaged, do not handle or transport it yourself. Contact the collection provider for safe-handling instructions. Local regulations and recycler requirements take precedence.</p>
-        </section>
-
-        <section class="container table-section" id="impact">
-          <div class="section-topline">
-            <div>
-              <span class="eyebrow small">Operational dashboard</span>
-              <h2 id="requestsTitle">Recent collection requests</h2>
-            </div>
-            <div class="request-toolbar">
-              <span class="request-count" id="requestCount" aria-live="polite"></span>
-              <label class="sr-only" for="adminStatusFilter">Filter requests by status</label>
-              <select class="request-filter" id="adminStatusFilter" hidden>
-                <option value="all">All statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="Collected">Collected</option>
-                <option value="Processing">Processing</option>
-                <option value="Completed">Completed</option>
-                <option value="Rejected">Rejected</option>
+            <div class="field">
+              <label for="authRole">Role</label>
+              <select id="authRole">
+                <option value="user">User – request collections</option>
+                <option value="admin">Administrator – manage requests</option>
               </select>
-              <div class="table-tools">
-                <input id="requestSearch" type="search" placeholder="Search customer or item" />
-              </div>
+            </div>
+            <div class="field">
+              <label for="authEmail">Email</label>
+              <input
+                id="authEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="name@example.com"
+              />
+            </div>
+            <div class="field">
+              <label for="authPassword">Password</label>
+              <input
+                id="authPassword"
+                type="password"
+                autocomplete="current-password"
+                placeholder="At least 6 characters"
+              />
+            </div>
+            <p class="form-error" id="authMessage" role="alert"></p>
+            <button
+              class="btn btn-primary btn-block"
+              id="authSubmit"
+              type="submit"
+            >
+              Sign in
+            </button>
+          </form>
+
+          <div class="demo-box">
+            <p>Demo accounts (any password of 6+ characters)</p>
+            <div class="demo-actions">
+              <button type="button" class="btn btn-sm" data-demo="user">
+                Fill user
+              </button>
+              <button type="button" class="btn btn-sm" data-demo="admin">
+                Fill administrator
+              </button>
             </div>
           </div>
-
-          <div class="table-wrap glass-card">
-            <table>
-              <thead>
-                <tr>
-                  <th>Request ID</th>
-                  <th>User</th>
-                  <th>Category</th>
-                  <th>Method</th>
-                  <th>Date</th>
-                  <th>Shop or address</th>
-                  <th>Status</th>
-                  <th id="actionsHeading" hidden>Manage</th>
-                </tr>
-              </thead>
-              <tbody id="requestsTableBody"></tbody>
-            </table>
-          </div>
-          <p class="dashboard-message" id="dashboardMessage" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="container centers-section" id="centers">
-          <div class="section-topline">
-            <div>
-              <span class="eyebrow small">Explore nearby options</span>
-              <h2>Electronics and recycling shops near you</h2>
-            </div>
-            <form class="directory-actions" id="locationSearchForm">
-              <label class="sr-only" for="locationSearch">City or postcode in India</label>
-              <input id="locationSearch" type="search" placeholder="Enter city or postcode" aria-label="City or postcode in India" required />
-              <button class="primary-btn" id="searchLocationsButton" type="submit">Search</button>
-              <button class="secondary-btn" id="findNearbyButton" type="button">Use my location</button>
-            </form>
-          </div>
-
-          <div id="centersGrid" class="centers-grid"></div>
-          <p class="locations-message" id="locationsMessage" role="status" aria-live="polite">Search an Indian city or postcode, or use your device location to find nearby electronics shops and mapped recycling points.</p>
-          <p class="locations-notice">Listings are sourced from OpenStreetMap and may be incomplete. Electronics shops and scrap yards are potential options, not confirmed e-waste recyclers. Call ahead to confirm acceptance, item requirements, and opening hours. Your city or postcode, or your coordinates when you choose “Use my location,” are sent to Nominatim and the Overpass API to find nearby locations. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>.</p>
-        </section>
+          <p class="fine">
+            Sign-in is simulated and is not secure. A server is required for
+            real accounts.
+          </p>
         </div>
-      </main>
+      </section>
     </div>
 
-    <script src="app.js"></script>
+    <!-- ============ Application ============ -->
+    <div class="app" id="app" hidden>
+      <aside class="sidebar" id="sidebar" aria-label="Primary">
+        <div class="brand">
+          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" /></span>
+          <span class="brand-text"
+            ><strong>EcoCycle</strong
+            ><small id="roleCaption">Collections</small></span
+          >
+        </div>
+        <nav class="nav" id="nav" aria-label="Main navigation"></nav>
+        <div class="sidebar-foot">
+          <div class="account">
+            <span class="avatar" id="avatar" aria-hidden="true"></span>
+            <span class="account-text"
+              ><strong id="accountName"></strong><small id="accountRole"></small
+            ></span>
+          </div>
+          <button
+            class="icon-btn on-dark"
+            id="logoutButton"
+            type="button"
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            <svg class="i"><use href="#i-logout" /></svg>
+          </button>
+        </div>
+      </aside>
+      <div class="scrim" id="scrim"></div>
+
+      <div class="main">
+        <header class="topbar">
+          <button
+            class="icon-btn menu-btn"
+            id="menuButton"
+            type="button"
+            aria-label="Open navigation"
+          >
+            <svg class="i"><use href="#i-menu" /></svg>
+          </button>
+          <h1 class="page-title" id="pageTitle">Overview</h1>
+          <form class="global-search" id="globalSearchForm" role="search">
+            <svg class="i"><use href="#i-search" /></svg>
+            <input
+              id="globalSearch"
+              type="search"
+              placeholder="Search requests, locations, or items..."
+              aria-label="Search requests, locations, or items"
+            />
+            <kbd>/</kbd>
+          </form>
+          <div class="topbar-right">
+            <a class="icon-btn notification-btn" href="#/requests" aria-label="Open requests awaiting review" title="Open requests">
+              <svg class="i"><use href="#i-bell" /></svg>
+              <span class="notification-count" id="topbarBadge" hidden></span>
+            </a>
+            <button
+              class="icon-btn"
+              id="themeToggle"
+              type="button"
+              aria-label="Switch to dark theme"
+              title="Switch theme"
+            >
+              <svg class="i"><use href="#i-moon" /></svg>
+            </button>
+            <span class="topbar-avatar" id="topbarAvatar" aria-label="Signed in account"></span>
+          </div>
+        </header>
+
+        <main class="views" id="views">
+          <!-- Overview -->
+          <section class="view" id="view-overview" aria-labelledby="dashboardHeading">
+            <div class="dashboard-heading">
+              <div>
+                <h1 id="dashboardHeading">Overview</h1>
+                <p>Track recycling progress and manage requests efficiently.</p>
+              </div>
+              <div class="dashboard-date">
+                <svg class="i"><use href="#i-calendar" /></svg>
+                <time id="todayLabel"></time>
+              </div>
+            </div>
+            <div class="overview-intro">
+              <div class="overview-intro-icon" aria-hidden="true">
+                ♻
+              </div>
+              <div class="overview-intro-copy">
+                <p class="eyebrow">YOUR WORKSPACE</p>
+                <h2>Collection overview</h2>
+                <p>Keep track of requests and see recycling progress at a glance.</p>
+              </div>
+              <a class="btn btn-primary" href="#/requests">View requests <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="kpis" id="kpis"></div>
+            <div class="grid-2" id="overviewGrid"></div>
+          </section>
+
+          <!-- Requests -->
+          <section class="view" id="view-requests" hidden>
+            <div class="toolbar">
+              <div class="search">
+                <svg class="i"><use href="#i-search" /></svg>
+                <input
+                  id="requestSearch"
+                  type="search"
+                  placeholder="Search by name, item, location or ID"
+                  aria-label="Search requests"
+                />
+              </div>
+              <select id="statusFilter" aria-label="Filter by status"></select>
+              <select id="methodFilter" aria-label="Filter by method">
+                <option value="all">All methods</option>
+                <option value="Pickup">Pickup</option>
+                <option value="Drop-off">Drop-off</option>
+              </select>
+              <span
+                class="toolbar-count"
+                id="requestCount"
+                aria-live="polite"
+              ></span>
+              <button class="btn" id="exportCsv" type="button">
+                <svg class="i"><use href="#i-download" /></svg>Export CSV
+              </button>
+            </div>
+            <div class="panel flush">
+              <div class="table-wrap">
+                <table class="tbl" id="requestsTable">
+                  <thead>
+                    <tr>
+                      <th scope="col">Request</th>
+                      <th scope="col" class="col-requester">Requester</th>
+                      <th scope="col">Category</th>
+                      <th scope="col">Method</th>
+                      <th scope="col">Date</th>
+                      <th scope="col" class="col-location">Location</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="requestsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- New request -->
+          <section class="view" id="view-new" hidden>
+            <div class="split">
+              <div class="panel">
+                <div class="panel-head"><h2>Request details</h2></div>
+                <form class="form form-grid" id="requestForm" novalidate>
+                  <div class="field">
+                    <label for="fName">Full name</label>
+                    <input id="fName" type="text" readonly />
+                  </div>
+                  <div class="field">
+                    <label for="fEmail">Email</label>
+                    <input id="fEmail" type="email" readonly />
+                  </div>
+                  <div class="field">
+                    <label for="fCategory">Category</label>
+                    <select id="fCategory"></select>
+                  </div>
+                  <div class="field">
+                    <label for="fQty">Quantity</label>
+                    <input id="fQty" type="number" min="1" max="99" value="1" />
+                  </div>
+                  <fieldset class="field span-2 segmented">
+                    <legend>Collection method</legend>
+                    <label
+                      ><input
+                        type="radio"
+                        name="fMethod"
+                        value="Pickup"
+                        checked
+                      /><span>Home pickup</span></label
+                    >
+                    <label
+                      ><input
+                        type="radio"
+                        name="fMethod"
+                        value="Drop-off"
+                      /><span>Drop off at a point</span></label
+                    >
+                  </fieldset>
+                  <div class="field">
+                    <label for="fDate" id="fDateLabel">Pickup date</label>
+                    <input id="fDate" type="date" />
+                  </div>
+                  <div class="field">
+                    <label for="fPhone">Phone (optional)</label>
+                    <input
+                      id="fPhone"
+                      type="tel"
+                      autocomplete="tel"
+                      placeholder="+91"
+                    />
+                  </div>
+                  <div class="field span-2" id="fAddressField">
+                    <label for="fAddress">Pickup address</label>
+                    <textarea
+                      id="fAddress"
+                      rows="3"
+                      autocomplete="street-address"
+                      placeholder="House or building, street, area, city, PIN"
+                    ></textarea>
+                  </div>
+                  <div class="field span-2" id="fDropField" hidden>
+                    <label for="fDrop">Drop-off point</label>
+                    <div class="input-action">
+                      <input
+                        id="fDrop"
+                        type="text"
+                        placeholder="Name and address of the point"
+                      />
+                      <a class="btn" href="#/map"
+                        ><svg class="i"><use href="#i-pin" /></svg>Choose on
+                        map</a
+                      >
+                    </div>
+                    <small class="hint"
+                      >Search the map, then select “Use for drop-off request”.
+                      Call the point first to confirm it accepts your
+                      items.</small
+                    >
+                  </div>
+                  <div class="field span-2">
+                    <label for="fNotes">Notes (optional)</label>
+                    <textarea
+                      id="fNotes"
+                      rows="2"
+                      placeholder="Item condition, access instructions, preferred time"
+                    ></textarea>
+                  </div>
+                  <p
+                    class="form-error span-2"
+                    id="requestError"
+                    role="alert"
+                  ></p>
+                  <div class="form-actions span-2">
+                    <button class="btn btn-primary" type="submit">
+                      Submit request
+                    </button>
+                    <a class="btn" href="#/requests">Cancel</a>
+                  </div>
+                </form>
+              </div>
+
+              <aside class="panel aside-note">
+                <div class="panel-head"><h2>Before you hand over</h2></div>
+                <ul class="check-list">
+                  <li>
+                    Back up files and sign out of accounts. Remove SIM and
+                    memory cards.
+                  </li>
+                  <li>Keep devices dry and intact. Do not open them.</li>
+                  <li>
+                    Keep damaged or swollen batteries separate and contact the
+                    provider first.
+                  </li>
+                </ul>
+                <a class="link" href="#/guide">Read the full safety guide</a>
+              </aside>
+            </div>
+          </section>
+
+          <!-- Map -->
+          <section class="view" id="view-map" hidden>
+            <div class="map-toolbar">
+              <form class="search-form" id="mapSearchForm">
+                <div class="search">
+                  <svg class="i"><use href="#i-search" /></svg>
+                  <input
+                    id="mapQuery"
+                    type="search"
+                    placeholder="City or PIN code in India"
+                    aria-label="City or PIN code in India"
+                  />
+                </div>
+                <select id="mapRadius" aria-label="Search radius">
+                  <option value="5">5 km</option>
+                  <option value="10" selected>10 km</option>
+                  <option value="25">25 km</option>
+                </select>
+                <button class="btn btn-primary" id="mapSearchBtn" type="submit">
+                  Search
+                </button>
+                <button class="btn" id="mapLocateBtn" type="button">
+                  <svg class="i"><use href="#i-locate" /></svg>Use my location
+                </button>
+              </form>
+              <div
+                class="quick-cities"
+                id="quickCities"
+                aria-label="Quick searches"
+              ></div>
+            </div>
+
+            <div class="map-layout">
+              <div class="map-card">
+                <div
+                  id="map"
+                  class="map"
+                  role="region"
+                  aria-label="Map of recycling points and shops"
+                ></div>
+                <div class="map-hint" id="mapHint">
+                  Click the map to search that area
+                </div>
+              </div>
+              <aside class="place-panel" aria-label="Search results">
+                <div class="place-head">
+                  <div>
+                    <h2 id="placeTitle">Results</h2>
+                    <p
+                      class="place-sub"
+                      id="mapStatus"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      Search a city or PIN code, use your location, or click the
+                      map.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="chips"
+                  id="typeChips"
+                  role="group"
+                  aria-label="Filter by place type"
+                ></div>
+                <ul class="place-list" id="placeList"></ul>
+              </aside>
+            </div>
+            <p class="fine">
+              Places come from OpenStreetMap contributors and may be incomplete.
+              Shops and scrap yards are possible drop-off options, not confirmed
+              e-waste recyclers. Call ahead to confirm accepted items and
+              opening hours. Your search text or coordinates are sent to
+              Nominatim and Overpass to find places.
+            </p>
+          </section>
+
+          <!-- Categories -->
+          <section class="view" id="view-categories" hidden>
+            <div class="panel flush">
+              <div class="table-wrap">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th scope="col">Category</th>
+                      <th scope="col">Includes</th>
+                      <th scope="col">Handling</th>
+                      <th scope="col"><span class="sr-only">Action</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="categoryBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <p class="fine">
+              Acceptance varies by shop and collector. Confirm before you hand
+              items over.
+            </p>
+          </section>
+
+          <!-- Guide -->
+          <section class="view" id="view-guide" hidden>
+            <div class="panel guide">
+              <div class="panel-head"><h2>Recycling procedure</h2></div>
+              <ol class="steps">
+                <li>
+                  <h3>Prepare the device</h3>
+                  <p>
+                    Back up your files, sign out of accounts, and erase personal
+                    data where possible. Remove SIM and memory cards.
+                  </p>
+                </li>
+                <li>
+                  <h3>Keep items safe</h3>
+                  <p>
+                    Keep devices dry and intact. Do not open electronics or
+                    remove built-in batteries. Follow the recycler’s
+                    instructions for loose batteries.
+                  </p>
+                </li>
+                <li>
+                  <h3>Arrange the handover</h3>
+                  <p>
+                    Submit a pickup or drop-off request. Confirm that the
+                    location accepts your items before you travel.
+                  </p>
+                </li>
+                <li>
+                  <h3>Use authorised processing</h3>
+                  <p>
+                    Items should be assessed for reuse or repair, then processed
+                    by an appropriate recycler that recovers materials and
+                    manages residues.
+                  </p>
+                </li>
+              </ol>
+              <div class="callout">
+                <svg class="i"><use href="#i-alert" /></svg>
+                <p>
+                  <strong>Battery safety.</strong> If a battery is swollen, hot,
+                  leaking or damaged, do not handle or transport it yourself.
+                  Contact the collection provider for instructions. Local
+                  regulations and recycler requirements take precedence.
+                </p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- Detail drawer -->
+    <div class="drawer-scrim" id="drawerScrim" hidden></div>
+    <aside
+      class="drawer"
+      id="drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="drawerTitle"
+      hidden
+    >
+      <div class="drawer-head">
+        <div>
+          <h2 id="drawerTitle">Request</h2>
+          <div id="drawerSub"></div>
+        </div>
+        <button
+          class="icon-btn"
+          id="drawerClose"
+          type="button"
+          aria-label="Close details"
+        >
+          <svg class="i"><use href="#i-x" /></svg>
+        </button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+    </aside>
+
+    <!-- Confirm dialog -->
+    <div class="modal-scrim" id="modal" hidden>
+      <div
+        class="modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+        aria-describedby="modalText"
+      >
+        <h2 id="modalTitle"></h2>
+        <p id="modalText"></p>
+        <div class="modal-actions">
+          <button class="btn" id="modalCancel" type="button">Cancel</button>
+          <button class="btn btn-danger" id="modalOk" type="button">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="app.js?v=9"></script>
   </body>
 </html>
