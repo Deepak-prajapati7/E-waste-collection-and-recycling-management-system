@@ -734,6 +734,12 @@ function setDashboardMode() {
   document.body.classList.toggle("admin-mode", isAdmin);
   authSection.hidden = true;
   dashboardContent.hidden = false;
+  const sopSection = document.getElementById("sop");
+  const requestSection = document.getElementById("impact");
+  dashboardContent.insertBefore(
+    isAdmin ? requestSection : sopSection,
+    isAdmin ? sopSection : requestSection,
+  );
   document.getElementById("adminOverview").hidden = !isAdmin;
   document.getElementById("adminHeroPanel").hidden = !isAdmin;
   document.querySelector(".process-card").hidden = isAdmin;
@@ -747,13 +753,13 @@ function setDashboardMode() {
   document.getElementById("logoutButton").hidden = false;
   document.getElementById("pickup").hidden = isAdmin;
   document.getElementById("heroEyebrow").textContent = isAdmin
-    ? "Administrator workspace"
+    ? "Administrator portal"
     : "Your recycling space";
   document.getElementById("heroTitle").textContent = isAdmin
-    ? "Keep every collection moving forward."
+    ? "Collection operations"
     : "Recycle your old electronics responsibly.";
   document.getElementById("heroDescription").textContent = isAdmin
-    ? "A clear view of every collection. Review new requests, track progress, and keep recycling on schedule."
+    ? "Review collection requests, update status, and monitor recycling activity."
     : "Arrange a home pickup or find a nearby drop-off shop. Follow your request through processing.";
   document.getElementById("adminHeroDate").textContent =
     new Intl.DateTimeFormat(undefined, {

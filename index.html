@@ -26,6 +26,7 @@
         <nav class="main-nav" aria-label="Main navigation" hidden>
           <a href="#overview">Overview</a>
           <a href="#categories" id="categoriesNavLink">Categories</a>
+          <a href="#sop">Recycling SOP</a>
           <a href="#centers">Drop-off shops</a>
           <a href="#impact">Impact</a>
         </nav>
@@ -131,17 +132,16 @@
                 <li>Track the request as the shop receives and processes it.</li>
               </ol>
             </div>
-            <aside class="admin-hero-panel" id="adminHeroPanel" aria-label="Today's operations" hidden>
+            <aside class="admin-hero-panel" id="adminHeroPanel" aria-label="Pending collection requests" hidden>
               <div class="admin-hero-panel-top">
-                <span class="admin-live-indicator"><span aria-hidden="true"></span> Live overview</span>
-                <span class="admin-hero-mark" aria-hidden="true">EC</span>
+                <span class="admin-queue-label">Needs review</span>
+                <time class="admin-hero-date" id="adminHeroDate"></time>
               </div>
-              <p class="admin-hero-date" id="adminHeroDate"></p>
-              <h2>Your next collection starts here.</h2>
-              <p class="admin-hero-copy">Stay on top of new requests and keep every device moving toward responsible recycling.</p>
+              <h2>Pending requests</h2>
+              <p class="admin-hero-copy">New collection requests awaiting review.</p>
               <a href="#impact" class="admin-focus-link">
                 <span class="admin-focus-count" id="adminHeroPendingCount">0</span>
-                <span><strong>Requests need review</strong><small>Open the request queue <span aria-hidden="true">→</span></small></span>
+                <span><strong>Open request queue</strong><small>View and update requests</small></span>
               </a>
             </aside>
           </div>
@@ -150,29 +150,25 @@
         <section class="admin-overview container" id="adminOverview" aria-label="Request overview" hidden>
           <div class="admin-overview-heading">
             <div>
-              <span class="eyebrow small">Operations snapshot</span>
-              <h2>Collection requests at a glance</h2>
+              <span class="eyebrow small">Request summary</span>
+              <h2>Collection requests</h2>
             </div>
-            <a class="admin-overview-link" href="#impact">Review all requests <span aria-hidden="true">→</span></a>
+            <a class="admin-overview-link" href="#impact">Open request queue <span aria-hidden="true">→</span></a>
           </div>
           <div class="admin-stats-grid">
             <article class="admin-stat-card">
-              <span class="admin-stat-icon total" aria-hidden="true">ALL</span>
               <div><span class="admin-stat-label">Total requests</span><strong id="adminTotalRequests">0</strong></div>
-              <span class="admin-stat-note">All collection activity</span>
+              <span class="admin-stat-note">All submitted requests</span>
             </article>
             <article class="admin-stat-card">
-              <span class="admin-stat-icon pending" aria-hidden="true">NEW</span>
-              <div><span class="admin-stat-label">Needs review</span><strong id="adminPendingRequests">0</strong></div>
-              <span class="admin-stat-note">Waiting for a decision</span>
+              <div><span class="admin-stat-label">Pending</span><strong id="adminPendingRequests">0</strong></div>
+              <span class="admin-stat-note">Awaiting review</span>
             </article>
             <article class="admin-stat-card">
-              <span class="admin-stat-icon progress" aria-hidden="true">LIVE</span>
               <div><span class="admin-stat-label">In progress</span><strong id="adminInProgressRequests">0</strong></div>
               <span class="admin-stat-note">Approved through processing</span>
             </article>
             <article class="admin-stat-card">
-              <span class="admin-stat-icon completed" aria-hidden="true">DONE</span>
               <div><span class="admin-stat-label">Completed</span><strong id="adminCompletedRequests">0</strong></div>
               <span class="admin-stat-note">Successfully recycled</span>
             </article>
@@ -235,6 +231,49 @@
               <button type="submit" class="primary-btn wide">Submit collection request</button>
             </form>
           </aside>
+        </section>
+
+        <section class="container sop-section" id="sop" aria-labelledby="sopTitle">
+          <div class="section-topline">
+            <div>
+              <span class="eyebrow small">Safe recycling procedure</span>
+              <h2 id="sopTitle">Recycling SOP</h2>
+              <p class="sop-intro">Follow these steps to prepare e-waste for safe collection and responsible processing.</p>
+            </div>
+          </div>
+
+          <ol class="sop-steps">
+            <li class="sop-step">
+              <span class="sop-step-number" aria-hidden="true">01</span>
+              <div>
+                <h3>Prepare your device</h3>
+                <p>Back up your files, sign out of accounts, and erase personal data when possible. Remove SIM and memory cards.</p>
+              </div>
+            </li>
+            <li class="sop-step">
+              <span class="sop-step-number" aria-hidden="true">02</span>
+              <div>
+                <h3>Keep items safe</h3>
+                <p>Keep devices dry and intact. Do not open electronics or remove built-in batteries; follow the recycler’s instructions for loose batteries.</p>
+              </div>
+            </li>
+            <li class="sop-step">
+              <span class="sop-step-number" aria-hidden="true">03</span>
+              <div>
+                <h3>Arrange a handover</h3>
+                <p>Submit a pickup or drop-off request and confirm the location accepts your items before taking them there.</p>
+              </div>
+            </li>
+            <li class="sop-step">
+              <span class="sop-step-number" aria-hidden="true">04</span>
+              <div>
+                <h3>Use authorized processing</h3>
+                <p>Items should be assessed for reuse or repair, then processed by an appropriate recycler to recover materials and manage residues.</p>
+              </div>
+            </li>
+          </ol>
+
+          <p class="sop-safety-note"><strong>Safety first:</strong> If a battery is swollen, hot, leaking, or damaged, do not handle or transport it yourself. Contact the collection provider for safe-handling instructions. Local regulations and recycler requirements take precedence.</p>
         </section>
 
         <section class="container table-section" id="impact">
