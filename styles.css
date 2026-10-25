@@ -127,6 +127,7 @@ button { cursor: pointer; }
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
+.btn:active { transform: translateY(0); box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08); }
 .btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
 .btn-primary { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%); border-color: var(--accent); color: var(--accent-ink); }
 .btn-primary:hover { background: linear-gradient(180deg, var(--accent-hover) 0%, #0a634b 100%); border-color: var(--accent-hover); }
@@ -153,7 +154,9 @@ input[type="text"], input[type="email"], input[type="password"], input[type="tel
   width: 100%; min-height: 36px; padding: 7px 10px;
   border: 1px solid var(--line-strong); border-radius: var(--radius);
   background: var(--surface); color: var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
+input:hover, select:hover, textarea:hover { border-color: var(--muted); }
 textarea { resize: vertical; }
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 input:read-only { background: var(--surface-2); color: var(--muted); }
@@ -340,6 +343,11 @@ select { appearance: none; padding-right: 30px; background-image: linear-gradien
 .today { color: var(--muted); font-size: 13px; }
 .menu-btn { display: none; margin-left: -8px; }
 .views { padding: 28px 32px 48px; max-width: 1480px; width: 100%; }
+.view:not([hidden]) { animation: view-enter .2s ease-out both; }
+@keyframes view-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .dashboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
 .dashboard-heading h1 { color: var(--text); font-size: 27px; line-height: 1.2; font-weight: 600; letter-spacing: -.03em; }
 .dashboard-heading p { margin-top: 4px; color: var(--muted); font-size: 14px; }
@@ -633,7 +641,12 @@ select { appearance: none; padding-right: 30px; background-image: linear-gradien
 @keyframes toast-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer, .toast { animation: none; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
 
 /* ---------- Responsive ---------- */

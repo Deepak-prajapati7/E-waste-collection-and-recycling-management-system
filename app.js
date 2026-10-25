@@ -705,8 +705,21 @@
     return location.hash.replace(/^#\/?/, "").split("?")[0] || "overview";
   }
 
+  function setNavOpen(open) {
+    $("app").classList.toggle("nav-open", open);
+    $("menuButton").setAttribute("aria-expanded", String(open));
+    $("menuButton").setAttribute(
+      "aria-label",
+      open ? "Close navigation" : "Open navigation",
+    );
+    $("menuButton").innerHTML = icon(open ? "x" : "menu");
+  }
+
   function route() {
     if (!state.user) return;
+    const focusHeading =
+      $("app").classList.contains("nav-open") &&
+      window.matchMedia("(max-width: 860px)").matches;
     const allowed = NAV[state.user.role].map((n) => n.id);
     let view = currentHash();
     if (!allowed.includes(view)) view = "overview";
@@ -723,7 +736,7 @@
     $("pageTitle").textContent = title;
     document.title = `${title} – EcoCycle`;
     $("app").classList.toggle("is-overview", view === "overview");
-    $("app").classList.remove("nav-open");
+    setNavOpen(false);
     updateBadges();
     if (view === "overview") renderOverview();
     if (view === "requests") renderRequests();
@@ -731,6 +744,7 @@
     if (view === "categories") renderCategories();
     if (view === "map") showMap();
     window.scrollTo(0, 0);
+    if (focusHeading) $("pageTitle").focus();
   }
 
   /* ------------------------------------------------------------------
@@ -1864,14 +1878,22 @@
     $("themeToggle").addEventListener("click", () =>
       setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"),
     );
+    $("pageTitle").tabIndex = -1;
+    $("menuButton").setAttribute("aria-controls", "sidebar");
+    $("menuButton").setAttribute("aria-expanded", "false");
     $("menuButton").addEventListener("click", () =>
-      $("app").classList.toggle("nav-open"),
+      setNavOpen(!$("app").classList.contains("nav-open")),
     );
-    $("scrim").addEventListener("click", () =>
-      $("app").classList.remove("nav-open"),
-    );
+    $("scrim").addEventListener("click", () => setNavOpen(false));
     window.addEventListener("hashchange", route);
     document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Escape" &&
+        $("app").classList.contains("nav-open")
+      ) {
+        setNavOpen(false);
+        $("menuButton").focus();
+      }
       if (
         e.key === "/" &&
         !e.metaKey &&
