@@ -489,16 +489,55 @@
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        if (
-          Array.isArray(parsed) &&
-          parsed.every((r) => r && typeof r === "object" && "id" in r)
-        )
-          return parsed;
+        if (Array.isArray(parsed) && parsed.every(isRequest)) return parsed;
       } catch {
         /* fall through */
       }
     }
     return seedRequests();
+  }
+
+  function isRequest(r) {
+    return (
+      r !== null &&
+      typeof r === "object" &&
+      ["string", "number"].includes(typeof r.id) &&
+      String(r.id).trim() !== "" &&
+      typeof r.user === "string" &&
+      typeof r.email === "string" &&
+      typeof r.category === "string" &&
+      ["Pickup", "Drop-off"].includes(r.method) &&
+      typeof r.date === "string" &&
+      typeof r.location === "string" &&
+      STATUSES.includes(r.status) &&
+      typeof r.createdAt === "string" &&
+      !Number.isNaN(Date.parse(r.createdAt)) &&
+      (r.qty === undefined || (Number.isFinite(r.qty) && r.qty >= 1)) &&
+      (r.phone === undefined || typeof r.phone === "string") &&
+      (r.notes === undefined || typeof r.notes === "string") &&
+      (r.history === undefined ||
+        (Array.isArray(r.history) &&
+          r.history.every(
+            (entry) =>
+              entry !== null &&
+              typeof entry === "object" &&
+              typeof entry.status === "string" &&
+              typeof entry.at === "string" &&
+              typeof entry.by === "string",
+          )))
+    );
+  }
+
+  function isProfile(profile) {
+    return (
+      profile !== null &&
+      typeof profile === "object" &&
+      ["admin", "user"].includes(profile.role) &&
+      typeof profile.name === "string" &&
+      profile.name.trim() !== "" &&
+      typeof profile.email === "string" &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)
+    );
   }
 
   /* ------------------------------------------------------------------
@@ -1272,7 +1311,10 @@
     }
     err.textContent = "";
     const id =
-      Math.max(1000, ...state.requests.map((r) => Number(r.id) || 0)) + 1;
+      state.requests.reduce(
+        (max, r) => Math.max(max, Number(r.id) || 0),
+        1000,
+      ) + 1;
     const now = new Date().toISOString();
     state.requests.unshift({
       id,
@@ -2042,8 +2084,7 @@
   if (saved) {
     try {
       const p = JSON.parse(saved);
-      if (p && ["admin", "user"].includes(p.role) && p.email && p.name)
-        startSession(p, false);
+      if (isProfile(p)) startSession(p, false);
       else store.del(STORE.session);
     } catch {
       store.del(STORE.session);
