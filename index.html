@@ -8,6 +8,16 @@
       name="description"
       content="Request e-waste pickups, find recycling points on a map, and manage collection requests."
     />
+    <meta http-equiv="dns-prefetch" href="//tile.openstreetmap.org" />
+    <meta http-equiv="dns-prefetch" href="//a.tile.openstreetmap.org" />
+    <meta http-equiv="dns-prefetch" href="//nominatim.openstreetmap.org" />
+    <meta http-equiv="dns-prefetch" href="//overpass.openstreetmap.fr" />
+    <meta http-equiv="dns-prefetch" href="//basemaps.cartocdn.com" />
+    <meta http-equiv="preconnect" href="https://tile.openstreetmap.org" />
+    <meta http-equiv="preconnect" href="https://a.tile.openstreetmap.org" />
+    <meta http-equiv="preconnect" href="https://nominatim.openstreetmap.org" />
+    <meta http-equiv="preconnect" href="https://overpass.openstreetmap.fr" />
+    <meta http-equiv="preconnect" href="https://basemaps.cartocdn.com" />
     <link rel="icon" href="Assest/logo.jpeg" />
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet" href="styles.css?v=8" />
@@ -119,7 +129,7 @@
     <div class="auth" id="auth">
       <section class="auth-brand">
         <div class="brand">
-          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" /></span>
+          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" fetchpriority="high" decoding="async" /></span>
           <span class="brand-text"
             ><strong>EcoCycle</strong
             ><small>E-waste collection and recycling</small></span
@@ -243,7 +253,7 @@
     <div class="app" id="app" hidden>
       <aside class="sidebar" id="sidebar" aria-label="Primary">
         <div class="brand">
-          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" /></span>
+          <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" fetchpriority="high" decoding="async" /></span>
           <span class="brand-text"
             ><strong>EcoCycle</strong
             ><small id="roleCaption">Collections</small></span
@@ -705,7 +715,7 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script src="vendor/leaflet/leaflet.js"></script>
-    <script src="app.js?v=10"></script>
+    <script defer src="vendor/leaflet/leaflet.js"></script>
+    <script defer src="app.js?v=10"></script>
   </body>
 </html>
