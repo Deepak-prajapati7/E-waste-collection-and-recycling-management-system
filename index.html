@@ -289,10 +289,12 @@
             id="menuButton"
             type="button"
             aria-label="Open navigation"
+            aria-controls="sidebar"
+            aria-expanded="false"
           >
             <svg class="i"><use href="#i-menu" /></svg>
           </button>
-          <h1 class="page-title" id="pageTitle">Overview</h1>
+          <h1 class="page-title" id="pageTitle" aria-live="polite">Overview</h1>
           <form class="global-search" id="globalSearchForm" role="search">
             <svg class="i"><use href="#i-search" /></svg>
             <input
