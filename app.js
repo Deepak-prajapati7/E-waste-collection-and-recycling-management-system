@@ -782,8 +782,11 @@
     if (view === "new") prepareForm();
     if (view === "categories") renderCategories();
     if (view === "map") showMap();
-    window.scrollTo(0, 0);
+    const main = $("main-content");
+    if (main) main.setAttribute("tabindex", "-1");
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     if (focusHeading) $("pageTitle").focus();
+    else if (main) main.focus({ preventScroll: true });
   }
 
   /* ------------------------------------------------------------------
