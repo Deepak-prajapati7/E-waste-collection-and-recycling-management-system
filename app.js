@@ -5,9 +5,10 @@
    * Constants
    * ------------------------------------------------------------------ */
   const STORE = {
+    theme: "ecocycle-theme",
     requests: "ecocycle.v2.requests",
     session: "ecocycle.v2.session",
-    theme: "ecocycle-theme",
+    accounts: "ecocycle.v2.accounts",
   };
 
   const CATEGORIES = [
@@ -108,14 +109,6 @@
     "Cancelled",
   ];
   const IN_PROGRESS = ["Approved", "Scheduled", "Collected", "Processing"];
-  const FLOW = [
-    "Pending",
-    "Approved",
-    "Scheduled",
-    "Collected",
-    "Processing",
-    "Completed",
-  ];
   const sKey = (s) => String(s || "").toLowerCase();
 
   const NAV = {
@@ -179,17 +172,6 @@
   const toISO = (d) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const todayISO = () => toISO(new Date());
-  const addDays = (n, from = new Date()) => {
-    const d = new Date(
-      from.getFullYear(),
-      from.getMonth(),
-      from.getDate() + n,
-      10,
-      0,
-      0,
-    );
-    return d;
-  };
   const fmtDate = (iso) => {
     const d = new Date(String(iso).length <= 10 ? `${iso}T00:00:00` : iso);
     return Number.isNaN(d.getTime())
@@ -237,264 +219,155 @@
         return false;
       }
     },
-    del(k) {
-      try {
-        localStorage.removeItem(k);
-      } catch {
-        /* ignore */
-      }
-    },
   };
 
-  /* ------------------------------------------------------------------
-   * Seed data (sample records for the prototype)
-   * ------------------------------------------------------------------ */
-  function buildHistory(created, status, handler) {
-    const path =
-      status === "Rejected"
-        ? ["Pending", "Rejected"]
-        : status === "Cancelled"
-          ? ["Pending", "Cancelled"]
-          : FLOW.slice(0, FLOW.indexOf(status) + 1);
-    const now = Date.now();
-    return path.map((s, i) => {
-      const at = new Date(Math.min(addDays(i, created).getTime(), now - 60000));
-      return {
-        status: s,
-        at: at.toISOString(),
-        by: i === 0 ? "Requester" : handler,
-      };
-    });
-  }
-
-  function seedRequests() {
-    const rows = [
-      [
-        1001,
-        "Rahul Sharma",
-        "rahul@example.com",
-        "Computers",
-        "Pickup",
-        -9,
-        -2,
-        "B-14, Malviya Nagar, Jaipur, Rajasthan 302017",
-        "Collected",
-        2,
-      ],
-      [
-        1002,
-        "Priya Verma",
-        "priya@example.com",
-        "Mobile phones",
-        "Drop-off",
-        -5,
-        2,
-        "Croma, Connaught Place, New Delhi",
-        "Approved",
-        3,
-      ],
-      [
-        1003,
-        "Amit Gupta",
-        "amit@example.com",
-        "Batteries",
-        "Pickup",
-        -6,
-        0,
-        "Hazratganj, Lucknow, Uttar Pradesh",
-        "Scheduled",
-        12,
-      ],
-      [
-        1004,
-        "Sneha Patel",
-        "sneha@example.com",
-        "Televisions",
-        "Pickup",
-        -1,
-        3,
-        "Satellite Road, Ahmedabad, Gujarat",
-        "Pending",
-        1,
-      ],
-      [
-        1005,
-        "Rohit Singh",
-        "rohit@example.com",
-        "Printers",
-        "Pickup",
-        -12,
-        -6,
-        "Kothrud, Pune, Maharashtra",
-        "Rejected",
-        1,
-      ],
-      [
-        1006,
-        "Meera Nair",
-        "meera@example.com",
-        "Cables",
-        "Drop-off",
-        -20,
-        -14,
-        "Edappally, Kochi, Kerala",
-        "Completed",
-        6,
-      ],
-      [
-        1007,
-        "Karan Mehta",
-        "karan@example.com",
-        "Game consoles",
-        "Pickup",
-        -2,
-        4,
-        "Andheri West, Mumbai, Maharashtra",
-        "Pending",
-        2,
-      ],
-      [
-        1008,
-        "Ananya Iyer",
-        "ananya@example.com",
-        "Networking equipment",
-        "Drop-off",
-        -10,
-        -4,
-        "Indiranagar, Bengaluru, Karnataka",
-        "Processing",
-        4,
-      ],
-      [
-        1009,
-        "Vikram Rao",
-        "vikram@example.com",
-        "Small appliances",
-        "Pickup",
-        -27,
-        -21,
-        "Banjara Hills, Hyderabad, Telangana",
-        "Completed",
-        3,
-      ],
-      [
-        1010,
-        "Neha Kapoor",
-        "neha@example.com",
-        "Wearables",
-        "Drop-off",
-        0,
-        5,
-        "Sector 17, Chandigarh",
-        "Pending",
-        1,
-      ],
-      [
-        1011,
-        "Sandeep Joshi",
-        "sandeep@example.com",
-        "Audio equipment",
-        "Pickup",
-        -33,
-        -28,
-        "Vijay Nagar, Indore, Madhya Pradesh",
-        "Completed",
-        2,
-      ],
-      [
-        1012,
-        "Farhan Qureshi",
-        "farhan@example.com",
-        "Cameras",
-        "Pickup",
-        -15,
-        -9,
-        "MP Nagar, Bhopal, Madhya Pradesh",
-        "Cancelled",
-        1,
-      ],
-      [
-        1013,
-        "Divya Menon",
-        "divya@example.com",
-        "Computers",
-        "Pickup",
-        -3,
-        1,
-        "Kowdiar, Thiruvananthapuram, Kerala",
-        "Approved",
-        2,
-      ],
-      [
-        1014,
-        "Arjun Bose",
-        "arjun@example.com",
-        "Other small electronics",
-        "Drop-off",
-        -40,
-        -35,
-        "Salt Lake, Kolkata, West Bengal",
-        "Completed",
-        5,
-      ],
-      [
-        1015,
-        "Rahul Sharma",
-        "rahul@example.com",
-        "Mobile phones",
-        "Drop-off",
-        -30,
-        -26,
-        "Gaurav Tower, Malviya Nagar, Jaipur",
-        "Completed",
-        2,
-      ],
-      [
-        1016,
-        "Rahul Sharma",
-        "rahul@example.com",
-        "Batteries",
-        "Pickup",
-        -1,
-        3,
-        "B-14, Malviya Nagar, Jaipur, Rajasthan 302017",
-        "Pending",
-        4,
-      ],
-    ];
-    return rows.map(
-      ([id, user, email, category, method, c, d, location, status, qty]) => {
-        const created = addDays(c);
-        return {
-          id,
-          user,
-          email,
-          category,
-          method,
-          qty,
-          date: toISO(addDays(d)),
-          location,
-          notes: "",
-          phone: "",
-          status,
-          createdAt: created.toISOString(),
-          history: buildHistory(created, status, "Operations"),
-        };
-      },
-    );
-  }
-
-  function loadRequests() {
-    const raw = store.get(STORE.requests);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.every(isRequest)) return parsed;
-      } catch {
-        /* fall through */
-      }
+  function readStoredJson(key, fallback) {
+    const value = store.get(key);
+    if (value === null) return fallback;
+    try {
+      return JSON.parse(value);
+    } catch {
+      throw new Error("Saved browser data is invalid. Clear this site's stored data and try again.");
     }
-    return seedRequests();
+  }
+
+  function writeStoredJson(key, value) {
+    if (!store.set(key, JSON.stringify(value))) {
+      throw new Error("The browser could not save data. Check available storage and try again.");
+    }
+  }
+
+  function currentProfile() {
+    const profile = readStoredJson(STORE.session, null);
+    if (profile === null) throw new Error("Please sign in to continue.");
+    if (!isProfile(profile)) {
+      throw new Error("Saved account data is invalid. Sign in again.");
+    }
+    return profile;
+  }
+
+  async function localApi(path, options = {}) {
+    const method = options.method || "GET";
+    const body = options.body ? JSON.parse(options.body) : {};
+    if (method === "POST" && path === "/api/auth/login") {
+      const email = String(body.email || "").trim().toLowerCase();
+      const role = body.role;
+      const accounts = readStoredJson(STORE.accounts, []);
+      const account =
+        role === "user" && email === "rahul@example.com" && body.password === "demo1234"
+          ? { name: "Rahul Sharma", email, role: "user" }
+          : role === "admin" && email === "admin@example.com" && body.password === "demo1234"
+            ? { name: "System Admin", email, role: "admin" }
+            : accounts.find(
+                (saved) =>
+                  saved.email === email &&
+                  saved.password === body.password &&
+                  role === "user",
+              );
+      if (!account) throw new Error("Email, role, or password is incorrect.");
+      const profile = { name: account.name, email: account.email, role: account.role || role };
+      writeStoredJson(STORE.session, profile);
+      return profile;
+    }
+    if (method === "POST" && path === "/api/auth/register") {
+      const name = String(body.name || "").trim();
+      const email = String(body.email || "").trim().toLowerCase();
+      const password = body.password;
+      const accounts = readStoredJson(STORE.accounts, []);
+      if (!name) throw new Error("Enter your full name.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error("Enter a valid email address.");
+      }
+      if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+        throw new Error("Password must be between 8 and 128 characters.");
+      }
+      if (
+        email === "rahul@example.com" ||
+        email === "admin@example.com" ||
+        accounts.some((saved) => saved.email === email)
+      ) {
+        throw new Error("An account with that email already exists.");
+      }
+      const account = { name, email, password, role: "user" };
+      writeStoredJson(STORE.accounts, [...accounts, account]);
+      const profile = { name, email, role: "user" };
+      writeStoredJson(STORE.session, profile);
+      return profile;
+    }
+    if (method === "POST" && path === "/api/auth/logout") {
+      writeStoredJson(STORE.session, null);
+      return { ok: true };
+    }
+    if (method === "GET" && path === "/api/auth/session") {
+      return currentProfile();
+    }
+    const profile = currentProfile();
+    if (method === "GET" && path === "/api/requests") {
+      const requests = readStoredJson(STORE.requests, []);
+      if (!Array.isArray(requests) || !requests.every(isRequest)) {
+        throw new Error("Saved collection requests are invalid. Clear this site's stored data and try again.");
+      }
+      return profile.role === "admin"
+        ? requests
+        : requests.filter((request) => request.email.toLowerCase() === profile.email.toLowerCase());
+    }
+    if (method === "POST" && path === "/api/requests") {
+      if (profile.role !== "user") throw new Error("Only users can submit requests.");
+      const requests = readStoredJson(STORE.requests, []);
+      const request = {
+        id: Date.now(),
+        user: profile.name,
+        email: profile.email,
+        category: String(body.category || ""),
+        method: body.method,
+        qty: Number(body.qty),
+        date: String(body.date || ""),
+        location: String(body.location || ""),
+        notes: String(body.notes || ""),
+        phone: String(body.phone || ""),
+        status: "Pending",
+        createdAt: new Date().toISOString(),
+        history: [{ status: "Pending", at: new Date().toISOString(), by: profile.name }],
+      };
+      if (!isRequest(request)) throw new Error("The collection request is invalid.");
+      writeStoredJson(STORE.requests, [request, ...requests]);
+      return request;
+    }
+    const requestRoute = path.match(/^\/api\/requests\/(\d+)(?:\/status)?$/);
+    if (requestRoute && method === "PATCH" && path.endsWith("/status")) {
+      const requests = readStoredJson(STORE.requests, []);
+      const request = requests.find((entry) => String(entry.id) === requestRoute[1]);
+      if (!request) throw new Error("Request not found.");
+      if (
+        profile.role === "user" &&
+        (body.status !== "Cancelled" || request.email.toLowerCase() !== profile.email.toLowerCase() || request.status !== "Pending")
+      ) {
+        throw new Error("Users can only cancel their own pending requests.");
+      }
+      if (!STATUSES.includes(body.status)) throw new Error("Choose a valid status.");
+      request.status = body.status;
+      request.history = request.history || [];
+      request.history.push({ status: body.status, at: new Date().toISOString(), by: profile.name });
+      writeStoredJson(STORE.requests, requests);
+      return request;
+    }
+    if (requestRoute && method === "DELETE" && !path.endsWith("/status")) {
+      if (profile.role !== "admin") throw new Error("Administrator access is required.");
+      const requests = readStoredJson(STORE.requests, []);
+      const remaining = requests.filter((entry) => String(entry.id) !== requestRoute[1]);
+      if (remaining.length === requests.length) throw new Error("Request not found.");
+      writeStoredJson(STORE.requests, remaining);
+      return { ok: true };
+    }
+    throw new Error("This action is not available.");
+  }
+
+  async function loadRequests() {
+    const requests = await localApi("/api/requests");
+    if (!Array.isArray(requests) || !requests.every(isRequest)) {
+      throw new Error("Saved collection requests are invalid.");
+    }
+    state.requests = requests;
   }
 
   function isRequest(r) {
@@ -545,15 +418,10 @@
    * ------------------------------------------------------------------ */
   const state = {
     user: null,
-    requests: loadRequests(),
+    requests: [],
     view: "overview",
     openRequestId: null,
   };
-  let saveOk = true;
-  function persist() {
-    saveOk = store.set(STORE.requests, JSON.stringify(state.requests));
-    return saveOk;
-  }
   const isAdmin = () => state.user?.role === "admin";
   const myRequests = () =>
     isAdmin()
@@ -631,12 +499,18 @@
     $("authNameField").hidden = !signup;
     $("authTitle").textContent = signup ? "Create account" : "Sign in";
     $("authDescription").textContent = signup
-      ? "Set up a prototype account."
+      ? "Create a user account. Administrator access is provisioned separately."
       : "Use your account to continue.";
     $("authSubmit").textContent = signup ? "Create account" : "Sign in";
     $("authPassword").autocomplete = signup
       ? "new-password"
       : "current-password";
+    $("authPassword").minLength = signup ? 8 : 6;
+    $("authPassword").placeholder = signup
+      ? "At least 8 characters"
+      : "Demo password: demo1234";
+    $("authRole").disabled = signup;
+    if (signup) $("authRole").value = "user";
     for (const [id, active] of [
       ["loginTab", !signup],
       ["signupTab", signup],
@@ -647,9 +521,9 @@
     $("authMessage").textContent = "";
   }
 
-  function startSession(profile, remember = true) {
+  async function startSession(profile) {
+    await loadRequests();
     state.user = profile;
-    if (remember) store.set(STORE.session, JSON.stringify(profile));
     $("auth").hidden = true;
     $("app").hidden = false;
     $("avatar").textContent = initials(profile.name);
@@ -671,19 +545,28 @@
     route();
   }
 
-  function endSession() {
-    store.del(STORE.session);
+  async function endSession() {
+    let logoutError = "";
+    try {
+      await localApi("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      logoutError = error.message;
+    }
     state.user = null;
+    state.requests = [];
     closeDrawer();
     $("toasts").replaceChildren();
     $("app").hidden = true;
     $("auth").hidden = false;
     $("authForm").reset();
     setAuthMode("login");
+    $("authMessage").textContent = logoutError
+      ? `Signed out on this page, but the server could not end the session: ${logoutError}`
+      : "";
     history.replaceState(null, "", location.pathname);
   }
 
-  function submitAuth(e) {
+  async function submitAuth(e) {
     e.preventDefault();
     const email = $("authEmail").value.trim().toLowerCase();
     const password = $("authPassword").value;
@@ -697,18 +580,29 @@
       msg.textContent = "Enter a valid email address.";
       return;
     }
-    if (password.length < 6) {
-      msg.textContent = "Password must be at least 6 characters.";
+    const minLength = authMode === "signup" ? 8 : 6;
+    if (password.length < minLength) {
+      msg.textContent = `Password must be at least ${minLength} characters.`;
       return;
     }
-    const name =
-      authMode === "signup"
-        ? $("authName").value.trim()
-        : email
-            .split("@")[0]
-            .replace(/[._-]+/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-    startSession({ name, email, role });
+    const signup = authMode === "signup";
+    const payload = signup
+      ? { name: $("authName").value.trim(), email, password }
+      : { email, password, role: $("authRole").value };
+    const submit = $("authSubmit");
+    submit.disabled = true;
+    msg.textContent = "";
+    try {
+      const profile = await localApi(
+        signup ? "/api/auth/register" : "/api/auth/login",
+        { method: "POST", body: JSON.stringify(payload) },
+      );
+      await startSession(profile);
+    } catch (error) {
+      msg.textContent = error.message;
+    } finally {
+      submit.disabled = false;
+    }
   }
 
   /* ------------------------------------------------------------------
@@ -1224,25 +1118,25 @@
     `;
   }
 
-  function setStatus(r, status, by) {
+  async function setStatus(r, status) {
     if (r.status === status) return false;
-    r.status = status;
-    r.history = [
-      ...(r.history || []),
-      { status, at: new Date().toISOString(), by },
-    ];
+    const updated = await localApi(`/api/requests/${encodeURIComponent(r.id)}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    const index = state.requests.findIndex(
+      (request) => String(request.id) === String(updated.id),
+    );
+    if (index === -1) state.requests.unshift(updated);
+    else state.requests[index] = updated;
     return true;
   }
   function afterChange(message) {
-    const ok = persist();
     updateBadges();
     if (state.view === "overview") renderOverview();
     if (state.view === "requests") renderRequests();
     if (!$("drawer").hidden) renderDrawer();
-    toast(
-      ok ? message : `${message} (not saved: browser storage is unavailable)`,
-      ok ? "ok" : "error",
-    );
+    toast(message);
   }
 
   /* ------------------------------------------------------------------
@@ -1284,7 +1178,7 @@
   let pendingDrop = "";
   let pendingCategory = "";
 
-  function submitRequest(e) {
+  async function submitRequest(e) {
     e.preventDefault();
     if (isAdmin()) return;
     const err = $("requestError");
@@ -1313,37 +1207,31 @@
       return;
     }
     err.textContent = "";
-    const id =
-      state.requests.reduce(
-        (max, r) => Math.max(max, Number(r.id) || 0),
-        1000,
-      ) + 1;
-    const now = new Date().toISOString();
-    state.requests.unshift({
-      id,
-      user: state.user.name,
-      email: state.user.email,
-      phone: $("fPhone").value.trim(),
-      category: $("fCategory").value,
-      qty,
-      method,
-      date,
-      location,
-      notes: $("fNotes").value.trim(),
-      status: "Pending",
-      createdAt: now,
-      history: [{ status: "Pending", at: now, by: "Requester" }],
-    });
-    const ok = persist();
-    $("requestForm").reset();
-    $("fDrop").value = "";
-    toast(
-      ok
-        ? `Request ${displayId(id)} submitted`
-        : `Request ${displayId(id)} submitted (not saved: browser storage is unavailable)`,
-      ok ? "ok" : "error",
-    );
-    location_hash("#/requests");
+    const submit = $("requestForm").querySelector('[type="submit"]');
+    submit.disabled = true;
+    try {
+      const request = await localApi("/api/requests", {
+        method: "POST",
+        body: JSON.stringify({
+          method,
+          date,
+          location,
+          qty,
+          phone: $("fPhone").value.trim(),
+          category: $("fCategory").value,
+          notes: $("fNotes").value.trim(),
+        }),
+      });
+      state.requests.unshift(request);
+      $("requestForm").reset();
+      $("fDrop").value = "";
+      toast(`Request ${displayId(request.id)} submitted`);
+      location_hash("#/requests");
+    } catch (error) {
+      err.textContent = `Could not submit request: ${error.message}`;
+    } finally {
+      submit.disabled = false;
+    }
   }
   const location_hash = (h) => {
     window.location.hash = h;
@@ -1913,13 +1801,13 @@
         setAuthMode("login");
         $("authRole").value = admin ? "admin" : "user";
         $("authEmail").value = admin
-          ? "admin@ecocycle.example"
+          ? "admin@example.com"
           : "rahul@example.com";
         $("authPassword").value = "demo1234";
         $("authSubmit").focus();
       }),
     );
-    $("logoutButton").addEventListener("click", endSession);
+    $("logoutButton").addEventListener("click", () => void endSession());
     $("themeToggle").addEventListener("click", () =>
       setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"),
     );
@@ -2012,14 +1900,20 @@
     });
 
     // Delegated: open request details, quick actions, category shortcut
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
       const quick = e.target.closest("[data-quick]");
       if (quick && isAdmin()) {
         const r = findRequest(quick.dataset.id);
-        if (r && setStatus(r, quick.dataset.quick, state.user.name))
-          afterChange(
-            `${displayId(r.id)} ${quick.dataset.quick.toLowerCase()}`,
-          );
+        if (r) {
+          try {
+            if (await setStatus(r, quick.dataset.quick))
+              afterChange(
+                `${displayId(r.id)} ${quick.dataset.quick.toLowerCase()}`,
+              );
+          } catch (error) {
+            toast(`Could not update request: ${error.message}`, "error");
+          }
+        }
         return;
       }
       const cat = e.target.closest("[data-category]");
@@ -2050,9 +1944,13 @@
       if (!r) return;
       if (e.target.closest("#drawerSave") && isAdmin()) {
         const v = $("drawerStatus").value;
-        if (setStatus(r, v, state.user.name))
-          afterChange(`${displayId(r.id)} set to ${v}`);
-        else toast("Status is unchanged");
+        try {
+          if (await setStatus(r, v))
+            afterChange(`${displayId(r.id)} set to ${v}`);
+          else toast("Status is unchanged");
+        } catch (error) {
+          toast(`Could not update request: ${error.message}`, "error");
+        }
       }
       if (e.target.closest("#drawerDelete") && isAdmin()) {
         const ok = await confirmDialog({
@@ -2060,9 +1958,16 @@
           text: "This removes the request and its history. It can’t be undone.",
         });
         if (!ok) return;
-        state.requests = state.requests.filter((x) => x.id !== r.id);
-        closeDrawer();
-        afterChange(`${displayId(r.id)} deleted`);
+        try {
+          await localApi(`/api/requests/${encodeURIComponent(r.id)}`, {
+            method: "DELETE",
+          });
+          state.requests = state.requests.filter((x) => x.id !== r.id);
+          closeDrawer();
+          afterChange(`${displayId(r.id)} deleted`);
+        } catch (error) {
+          toast(`Could not delete request: ${error.message}`, "error");
+        }
       }
       if (e.target.closest("#drawerCancel") && !isAdmin()) {
         const ok = await confirmDialog({
@@ -2071,8 +1976,12 @@
           confirmLabel: "Cancel request",
         });
         if (!ok) return;
-        if (setStatus(r, "Cancelled", state.user.name))
-          afterChange(`${displayId(r.id)} cancelled`);
+        try {
+          if (await setStatus(r, "Cancelled"))
+            afterChange(`${displayId(r.id)} cancelled`);
+        } catch (error) {
+          toast(`Could not cancel request: ${error.message}`, "error");
+        }
       }
     });
   }
@@ -2083,14 +1992,16 @@
   setTheme(store.get(STORE.theme) === "dark" ? "dark" : "light");
   wire();
   setAuthMode("login");
-  const saved = store.get(STORE.session);
-  if (saved) {
-    try {
-      const p = JSON.parse(saved);
-      if (isProfile(p)) startSession(p, false);
-      else store.del(STORE.session);
-    } catch {
-      store.del(STORE.session);
-    }
-  }
+  localApi("/api/auth/session")
+    .then((profile) => {
+      if (!isProfile(profile)) {
+        throw new Error("The server returned an invalid account.");
+      }
+      return startSession(profile);
+    })
+    .catch((error) => {
+      if (!/^Please sign in|^Your session has expired/.test(error.message)) {
+        $("authMessage").textContent = error.message;
+      }
+    });
 })();

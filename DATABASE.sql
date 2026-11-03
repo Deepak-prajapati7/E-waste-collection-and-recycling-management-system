@@ -4,7 +4,8 @@
 -- Complete MySQL Database Script
 -- =====================================================
 
-CREATE DATABASE IF NOT EXISTS ewaste_management;
+CREATE DATABASE IF NOT EXISTS ewaste_management
+    CHARACTER SET utf8mb4;
 USE ewaste_management;
 
 -- =====================================================
@@ -14,9 +15,9 @@ USE ewaste_management;
 CREATE TABLE IF NOT EXISTS Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    phone VARCHAR(15),
-    address VARCHAR(255) NOT NULL,
+    email VARCHAR(254) NOT NULL UNIQUE,
+    phone VARCHAR(32),
+    address VARCHAR(255) NOT NULL DEFAULT '',
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS Users (
 CREATE TABLE IF NOT EXISTS Admins (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(254) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Recycling_Centers (
     center_name VARCHAR(150) NOT NULL,
     address VARCHAR(255) NOT NULL,
     phone VARCHAR(15),
-    email VARCHAR(100) UNIQUE
+    email VARCHAR(254) UNIQUE
 );
 
 -- =====================================================
@@ -63,9 +64,11 @@ CREATE TABLE IF NOT EXISTS Collection_Requests (
     request_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    pickup_date DATE,
+    pickup_date DATE NOT NULL,
     collection_method ENUM('Pickup', 'Drop-off') NOT NULL DEFAULT 'Pickup',
-    address VARCHAR(255) NOT NULL,
+    address VARCHAR(500) NOT NULL,
+    contact_phone VARCHAR(32),
+    notes TEXT,
     status ENUM(
         'Pending',
         'Approved',
@@ -75,16 +78,49 @@ CREATE TABLE IF NOT EXISTS Collection_Requests (
         'Processing',
         'Completed',
         'Cancelled'
-    ) DEFAULT 'Pending',
+    ) NOT NULL DEFAULT 'Pending',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id)
         REFERENCES Users(user_id)
         ON DELETE RESTRICT
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+
+    INDEX idx_requests_user_date (user_id, request_date),
+    INDEX idx_requests_status_date (status, pickup_date)
 );
 
 -- =====================================================
--- 6. REQUEST ITEMS TABLE
+-- 6. REQUEST STATUS HISTORY
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS Request_Status_History (
+    history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    status ENUM(
+        'Pending',
+        'Approved',
+        'Rejected',
+        'Scheduled',
+        'Collected',
+        'Processing',
+        'Completed',
+        'Cancelled'
+    ) NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    changed_by VARCHAR(100) NOT NULL,
+
+    FOREIGN KEY (request_id)
+        REFERENCES Collection_Requests(request_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+    INDEX idx_request_history (request_id, changed_at)
+);
+
+-- =====================================================
+-- 7. REQUEST ITEMS TABLE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS Request_Items (
@@ -93,7 +129,7 @@ CREATE TABLE IF NOT EXISTS Request_Items (
     category_id INT NOT NULL,
     item_description VARCHAR(255),
     quantity INT NOT NULL DEFAULT 1,
-    estimated_weight DECIMAL(10,2) NOT NULL,
+    estimated_weight DECIMAL(10,2),
 
     FOREIGN KEY (request_id)
         REFERENCES Collection_Requests(request_id)
@@ -106,11 +142,11 @@ CREATE TABLE IF NOT EXISTS Request_Items (
         ON UPDATE CASCADE,
 
     CHECK (quantity > 0),
-    CHECK (estimated_weight > 0)
+    CHECK (estimated_weight IS NULL OR estimated_weight > 0)
 );
 
 -- =====================================================
--- 7. COLLECTIONS TABLE
+-- 8. COLLECTIONS TABLE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS Collections (
@@ -140,7 +176,7 @@ CREATE TABLE IF NOT EXISTS Collections (
 );
 
 -- =====================================================
--- 8. RECYCLING RECORDS TABLE
+-- 9. RECYCLING RECORDS TABLE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS Recycling_Records (
@@ -161,7 +197,7 @@ CREATE TABLE IF NOT EXISTS Recycling_Records (
 );
 
 -- =====================================================
--- 9. RECOVERED MATERIALS TABLE
+-- 10. RECOVERED MATERIALS TABLE
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS Recovered_Materials (
@@ -188,13 +224,14 @@ INSERT INTO Users
 (name, email, phone, address, password_hash)
 VALUES
 ('Rahul Sharma', 'rahul@example.com',
- '9876500001', 'Jaipur, Rajasthan', 'DEMO_HASH_1'),
+ '9876500001', 'Jaipur, Rajasthan', 'scrypt$9bb570a2ba66c92b6051fe174954de07$da96253554f43db502fc017ea8159e406bdd7456dbba75403b0cea6ce68dfc6e1b368f0944ef46bd3f45eb2db9da9dc0d9b102aea73f17cd03bf258cbd679642'),
 
 ('Priya Verma', 'priya@example.com',
- '9876500002', 'Delhi, India', 'DEMO_HASH_2')
+ '9876500002', 'Delhi, India', 'scrypt$3158583b2e0a97abf746e8448eae7ba3$2dd332a08d46889243c1575ecd5a1619771cbb84f0aae754d383d61adaf875227a0317982389babc50572085ba749f9dabddd931aef2a322c6b033e50d866130')
 
 ON DUPLICATE KEY UPDATE
-    name = VALUES(name);
+    name = VALUES(name),
+    password_hash = VALUES(password_hash);
 
 
 -- 2. ADMINS
@@ -202,10 +239,12 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO Admins
 (name, email, password_hash)
 VALUES
-('System Admin', 'admin@example.com', 'DEMO_HASH_ADMIN')
+('System Admin', 'admin@example.com',
+ 'scrypt$de37714ea7d87b9ba4f2472b4cf683ef$beecd8e4f0ec9886935af7774f5c1a5a169a1d633a0f0023f1228bec028083f2362bab79d3d0b6123d6a1a579c64a232aff82f100418db9b65e5165d076e0248')
 
 ON DUPLICATE KEY UPDATE
-    name = VALUES(name);
+    name = VALUES(name),
+    password_hash = VALUES(password_hash);
 
 
 -- 3. WASTE CATEGORIES
@@ -214,7 +253,7 @@ INSERT INTO Waste_Categories
 (category_name, description)
 VALUES
 ('Computers', 'Desktop computers and laptops'),
-('Mobile Phones', 'Old and damaged mobile phones'),
+('Mobile phones', 'Old and damaged mobile phones'),
 ('Batteries', 'Electronic device batteries'),
 ('Televisions', 'Old LCD and LED televisions'),
 ('Printers', 'Printers and scanners'),
@@ -252,11 +291,12 @@ ON DUPLICATE KEY UPDATE
 -- =====================================================
 
 INSERT INTO Collection_Requests
-(user_id, pickup_date, address, status)
+(user_id, pickup_date, collection_method, address, status)
 
 SELECT
     u.user_id,
     '2026-10-20',
+    'Pickup',
     'Jaipur, Rajasthan',
     'Collected'
 
@@ -271,6 +311,30 @@ AND NOT EXISTS (
       AND cr.pickup_date = '2026-10-20'
       AND cr.address = 'Jaipur, Rajasthan'
 );
+
+-- Record the sample request's current status in its audit history.
+INSERT INTO Request_Status_History
+(request_id, status, changed_at, changed_by)
+
+SELECT
+    cr.request_id,
+    cr.status,
+    cr.request_date,
+    'Operations'
+
+FROM Collection_Requests cr
+
+JOIN Users u
+    ON u.user_id = cr.user_id
+
+WHERE u.email = 'rahul@example.com'
+  AND cr.pickup_date = '2026-10-20'
+  AND cr.address = 'Jaipur, Rajasthan'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM Request_Status_History rsh
+      WHERE rsh.request_id = cr.request_id
+  );
 
 
 -- =====================================================
@@ -330,7 +394,7 @@ JOIN Users u
     ON u.user_id = cr.user_id
 
 JOIN Waste_Categories wc
-    ON wc.category_name = 'Mobile Phones'
+    ON wc.category_name = 'Mobile phones'
 
 WHERE u.email = 'rahul@example.com'
   AND cr.pickup_date = '2026-10-20'
@@ -488,3 +552,7 @@ SELECT * FROM Recycling_Records;
 
 -- 9. Display Recovered Materials
 SELECT * FROM Recovered_Materials;
+
+
+-- 10. Display request status history
+SELECT * FROM Request_Status_History;

@@ -31,52 +31,31 @@ Map listings are sourced from OpenStreetMap and may be incomplete or outdated. A
 
 ## Run locally
 
-No package installation or build step is required. From the project directory, start a local web server:
+Open `index.html` in a browser, or serve this folder with any static web server. The sign-in and collection-request demo works without a backend. An internet connection is needed for map tiles and place searches. Browser geolocation is generally available only on HTTPS pages or localhost.
 
-```sh
-python3 -m http.server 8000
-```
+## Sign in
 
-Then open <http://localhost:8000> in a browser. You can also open `index.html` directly, but a local server is recommended. An internet connection is needed for map tiles and place searches. Browser geolocation is generally available only on HTTPS pages or localhost.
-
-## Try the prototype
-
-1. On the sign-in screen, choose **Fill user** or **Fill administrator**.
-2. Enter any password of at least six characters and sign in.
-3. As a user, create a pickup or drop-off request and view it in **My requests**. As an administrator, review and manage requests in **All requests**.
-
-You can also create a prototype account with a name and any valid email address. This is simulated access, not real account registration: there is no credential verification, and anyone can select the administrator role.
+- Demo user: `rahul@example.com` / `demo1234`
+- Demo administrator: `admin@example.com` / `demo1234`
+- New accounts are registered as users.
+- Choose the matching role on the sign-in form.
 
 ## Data and security
 
-- Requests, the signed-in prototype profile, and the selected theme are stored in the browser's local storage on the current device. There is no server, shared database, or synchronization between browsers.
-- The app starts with sample requests when no saved request data is available. Changes made in the prototype affect only that browser's local data.
-- Sign-in and role selection are not secure. Do not use real credentials or sensitive personal information. A production deployment needs server-side authentication and authorization, input validation, and an API.
+- The theme preference, demo accounts, and collection requests are stored in this browser only. They are not shared across browsers or devices.
+- Sign-in is for demonstration only and is not secure. Anyone can choose the administrator role; do not use real credentials or sensitive personal information.
 - Map searches send the entered place name or coordinates to the public Nominatim and Overpass services. These services have usage limits; production traffic should use appropriately configured, self-managed services or a compliant proxy and cache.
-- The included MySQL script is a separate schema/sample-data artifact. The browser app does not connect to it.
-
-## MySQL schema (optional)
-
-`DATABASE.sql` creates the `ewaste_management` database, defines the users, admins, categories, requests, collections, recycling records, and recovered-material tables, and inserts sample data. To load it with the MySQL command-line client:
-
-```sh
-mysql -u your_mysql_user -p < DATABASE.sql
-```
-
-This prepares the database only; it does not connect the web app to MySQL.
 
 ## Project files
 
 | File or folder | Purpose |
 | --- | --- |
 | `index.html` | App structure, forms, and views |
-| `app.js` | Client-side interactions, request state, storage, and map behavior |
+| `app.js` | Sign-in, browser-stored requests, interactions, and map behavior |
 | `styles.css` | Layout, components, and light/dark themes |
 | `vendor/leaflet/` | Locally bundled Leaflet map library and assets |
 | `fonts/` | Locally bundled IBM Plex Sans fonts and license |
 | `Assest/` | App logo and favicon |
-| `DATABASE.sql` | Standalone MySQL schema and sample data |
-| `ER MODEL.png` | Database entity-relationship diagram |
 | `ui.jpeg` | Dashboard preview |
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Map tiles may also be provided by [CARTO](https://carto.com/attributions).
