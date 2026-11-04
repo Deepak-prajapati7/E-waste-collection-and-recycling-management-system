@@ -424,6 +424,9 @@
       writeStoredJson(STORE.requests, remaining);
       return { ok: true };
     }
+    if (path === "/api/centers") {
+      return (typeof FALLBACK_CERTIFIED_CENTERS !== "undefined" ? FALLBACK_CERTIFIED_CENTERS : []);
+    }
     throw new Error("This action is not available.");
   }
 
@@ -1646,24 +1649,39 @@
       renderChips();
     }
     if (!M.map) initMap();
+
+    // Trigger progressive invalidateSize calls as the container unhides
+    requestAnimationFrame(() => M.map && M.map.invalidateSize());
+    setTimeout(() => M.map && M.map.invalidateSize(), 60);
+    setTimeout(() => M.map && M.map.invalidateSize(), 200);
+
     loadCertifiedCenters().then(() => {
       if (!M.origin && !M.busy) {
         runSearch({ query: "Jaipur" });
       }
     });
-    // The container was hidden when created; Leaflet needs a size refresh.
-    setTimeout(() => M.map && M.map.invalidateSize(), 0);
   }
 
   function initMap() {
     if (typeof L === "undefined") {
+      if (!M._retryCount) M._retryCount = 0;
+      if (M._retryCount < 25) {
+        M._retryCount++;
+        setTimeout(initMap, 50);
+        return;
+      }
       $("map").innerHTML =
-        `<div class="place-empty">The map library could not be loaded. Check that the <code>vendor/leaflet</code> folder is next to <code>index.html</code>.</div>`;
+        `<div class="place-empty">The map library is loading or unavailable. Please refresh the page.</div>`;
       return;
     }
-    // preferCanvas: true enables hardware-accelerated 60fps canvas rendering
+
+    if (M.map) return;
+
+    if (L.Icon && L.Icon.Default) {
+      L.Icon.Default.imagePath = "vendor/leaflet/images/";
+    }
+
     const map = L.map("map", {
-      preferCanvas: true,
       zoomControl: true,
       minZoom: 4,
       maxZoom: 18,
@@ -1673,19 +1691,21 @@
     }).setView([22.6, 79.0], 5);
     M.map = map;
 
-    // CartoCDN Voyager is delivered over global Fastly edge CDN with sub-50ms tile delivery
+    // Carto Voyager: high aesthetic quality and Fastly edge CDN speed
+    // Note: r: "" avoids Leaflet template throwing 'No value provided for variable {r}'
     const carto = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
         subdomains: "abcd",
-        keepBuffer: 8,
-        updateWhenIdle: true,
-        updateInterval: 80,
+        r: "",
+        keepBuffer: 6,
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
       },
     );
+
+    // Standard OpenStreetMap layer
     const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       keepBuffer: 6,
@@ -1693,43 +1713,30 @@
         '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
     });
 
-    let active = carto;
-    let activeTileErrors = 0;
-    let tileFailureReported = false;
-    const attemptedTileLayers = new Set([active]);
-    const handleTileError = (event) => {
-      if (event.target !== active) return;
-      activeTileErrors++;
-      if (activeTileErrors < 4) return;
-
-      const fallback = [carto, osm].find(
-        (layer) => !attemptedTileLayers.has(layer),
-      );
-      if (!fallback) {
-        if (!tileFailureReported) {
-          tileFailureReported = true;
-          mapMessage(
-            "Map tiles could not be loaded. Check your internet connection and try again.",
-            true,
-          );
+    let activeLayer = carto;
+    let tileErrors = 0;
+    const handleTileError = () => {
+      tileErrors++;
+      if (tileErrors >= 4) {
+        tileErrors = 0;
+        if (map.hasLayer(carto)) {
+          map.removeLayer(carto);
+          osm.addTo(map);
+          activeLayer = osm;
+        } else if (map.hasLayer(osm)) {
+          map.removeLayer(osm);
+          carto.addTo(map);
+          activeLayer = carto;
         }
-        return;
       }
-
-      map.removeLayer(active);
-      active = fallback;
-      attemptedTileLayers.add(active);
-      activeTileErrors = 0;
-      active.addTo(map);
     };
 
-    for (const layer of [carto, osm]) {
-      layer.on("tileerror", handleTileError);
-      layer.on("tileload", (event) => {
-        if (event.target === active) activeTileErrors = 0;
-      });
-    }
-    active.addTo(map);
+    carto.on("tileerror", handleTileError);
+    osm.on("tileerror", handleTileError);
+    carto.on("tileload", () => { tileErrors = 0; });
+    osm.on("tileload", () => { tileErrors = 0; });
+
+    activeLayer.addTo(map);
 
     M.group = L.layerGroup().addTo(map);
 
@@ -1744,6 +1751,16 @@
         label: "the selected point",
       });
     });
+
+    // ResizeObserver ensures map dynamically updates when layout unhides or container sizes
+    if (typeof ResizeObserver !== "undefined" && !M.resizeObserver) {
+      M.resizeObserver = new ResizeObserver(() => {
+        if (M.map && $("view-map") && !$("view-map").hidden) {
+          M.map.invalidateSize({ debounceMoveEvents: true });
+        }
+      });
+      M.resizeObserver.observe($("map"));
+    }
   }
 
   function setBusy(busy) {
@@ -2052,6 +2069,7 @@
   }
 
   function placeOrigin(origin, radiusKm) {
+    if (!M.map) return;
     const ll = [origin.latitude, origin.longitude];
     if (M.originMarker) M.map.removeLayer(M.originMarker);
     if (M.circle) M.map.removeLayer(M.circle);
@@ -2075,15 +2093,33 @@
       fillOpacity: 0.05,
       interactive: false,
     }).addTo(M.map);
-    M.map.fitBounds(M.circle.getBounds(), { padding: [20, 20] });
+
+    const sz = M.map.getSize();
+    if (sz.x > 80 && sz.y > 80) {
+      try {
+        M.map.fitBounds(M.circle.getBounds(), { padding: [20, 20], maxZoom: 14 });
+      } catch (_) {
+        M.map.setView(ll, 12);
+      }
+    } else {
+      M.map.setView(ll, 12);
+      setTimeout(() => {
+        if (M.map && M.circle) {
+          try {
+            M.map.fitBounds(M.circle.getBounds(), { padding: [20, 20], maxZoom: 14 });
+          } catch (_) {}
+        }
+      }, 120);
+    }
   }
 
   function popupHtml(p) {
+    const k = KINDS[p.kind] || KINDS.recycling;
     const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
     return `<div class="pop">
       <strong>${esc(p.name)}</strong>
       ${p.verified ? `<div style="margin: 4px 0 6px;"><span class="verified-tag">✓ Verified Partner</span></div>` : ""}
-      <span class="pop-type">${esc(KINDS[p.kind].label)} · ${esc(fmtDist(p.distance))} away</span>
+      <span class="pop-type">${esc(k.label)} · ${esc(fmtDist(p.distance))} away</span>
       ${p.address ? `<p>${esc(p.address)}</p>` : ""}
       ${p.phone ? `<p>Phone: <a href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${esc(p.phone)}</a></p>` : ""}
       ${p.hours ? `<p>Hours: ${esc(p.hours)}</p>` : ""}
@@ -2103,7 +2139,9 @@
 
   function renderChips() {
     const counts = { all: M.items.length, recycling: 0, shop: 0, scrap: 0 };
-    M.items.forEach((p) => counts[p.kind]++);
+    M.items.forEach((p) => {
+      if (counts[p.kind] !== undefined) counts[p.kind]++;
+    });
     const defs = [
       ["all", "All", null],
       ["recycling", "Recycling points", "k-recycling"],
@@ -2113,23 +2151,24 @@
     $("typeChips").innerHTML = defs
       .map(
         ([k, label, cls]) =>
-          `<button type="button" class="chip ${cls || ""}" data-filter="${k}" aria-pressed="${M.filter === k}">${cls ? "<i></i>" : ""}${label}<span>${counts[k]}</span></button>`,
+          `<button type="button" class="chip ${cls || ""}" data-filter="${k}" aria-pressed="${M.filter === k}">${cls ? "<i></i>" : ""}${label}<span>${counts[k] || 0}</span></button>`,
       )
       .join("");
   }
 
   function renderMapResults() {
     renderChips();
-    M.group?.clearLayers();
+    if (M.group) M.group.clearLayers();
     M.markers.clear();
     const items = visibleItems();
     for (const p of items) {
       const isVerified = Boolean(p.verified);
+      const kindDef = KINDS[p.kind] || KINDS.recycling;
       const m = L.circleMarker([p.lat, p.lon], {
         radius: isVerified ? 9 : 7,
         weight: isVerified ? 2.5 : 1.5,
         color: isVerified ? "#10b981" : "#ffffff",
-        fillColor: isVerified ? "#059669" : KINDS[p.kind].color,
+        fillColor: isVerified ? "#059669" : (kindDef.color || "#0f8a6a"),
         fillOpacity: 0.95,
         bubblingMouseEvents: false,
       }).addTo(M.group);
@@ -2146,7 +2185,7 @@
   }
 
   function placeItemHtml(p) {
-    const k = KINDS[p.kind];
+    const k = KINDS[p.kind] || KINDS.recycling;
     const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
     return `<li class="place ${k.cls} ${p.verified ? "is-verified" : ""}" data-place="${esc(p.key)}" tabindex="0">
       <div class="place-top">
@@ -2178,12 +2217,17 @@
       );
     const marker = M.markers.get(key);
     M.markers.forEach((m, k) => m.setStyle({ radius: k === key ? 10 : 7 }));
-    if (marker) {
+    if (marker && M.map) {
       marker.bringToFront();
-      if (fly)
-        M.map.flyTo(marker.getLatLng(), Math.max(M.map.getZoom(), 15), {
-          duration: 0.6,
-        });
+      if (fly) {
+        try {
+          M.map.flyTo(marker.getLatLng(), Math.max(M.map.getZoom(), 15), {
+            duration: 0.6,
+          });
+        } catch (_) {
+          M.map.setView(marker.getLatLng(), 15);
+        }
+      }
       marker.openPopup();
     }
     if (scrollList)
