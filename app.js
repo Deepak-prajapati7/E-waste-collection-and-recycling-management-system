@@ -246,7 +246,72 @@
     return profile;
   }
 
-  async function localApi(path, options = {}) {
+  const TOKEN_KEY = "ecocycle_jwt_token";
+
+  function setBackendStatus(online) {
+    const pill = $("backendPill");
+    const text = $("backendStatusText");
+    if (!pill || !text) return;
+    if (online) {
+      pill.classList.remove("is-offline");
+      text.textContent = "MongoDB Active";
+      pill.title = "Connected to Node.js & MongoDB Server";
+    } else {
+      pill.classList.add("is-offline");
+      text.textContent = "Offline Preview";
+      pill.title = "Server offline - run 'npm start' to connect to MongoDB";
+    }
+  }
+
+  // Ping server health
+  try {
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((data) => {
+        const isDb = data.database && (data.database.connected || data.status === "healthy");
+        setBackendStatus(isDb);
+      })
+      .catch(() => setBackendStatus(false));
+  } catch (_) {}
+
+  async function api(path, options = {}) {
+    const token = store.get(TOKEN_KEY);
+    const headers = {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(path, {
+        ...options,
+        headers,
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.status}`);
+      }
+
+      if (data.token) {
+        store.set(TOKEN_KEY, data.token);
+      }
+      if (path === "/api/auth/logout") {
+        store.set(TOKEN_KEY, null);
+      }
+
+      setBackendStatus(true);
+      return data;
+    } catch (netErr) {
+      setBackendStatus(false);
+      return localApiFallback(path, options);
+    }
+  }
+
+  async function localApiFallback(path, options = {}) {
     const method = options.method || "GET";
     const body = options.body ? JSON.parse(options.body) : {};
     if (method === "POST" && path === "/api/auth/login") {
@@ -362,18 +427,23 @@
     throw new Error("This action is not available.");
   }
 
+  const localApi = api;
+
   async function loadRequests() {
     const requests = await localApi("/api/requests");
-    if (!Array.isArray(requests) || !requests.every(isRequest)) {
+    if (!Array.isArray(requests)) {
       throw new Error("Saved collection requests are invalid.");
     }
-    state.requests = requests;
+    state.requests = requests.map((r) => {
+      r.id = r.id || r.numericId || r._id;
+      return r;
+    });
   }
 
   function isRequest(r) {
+    if (!r || typeof r !== "object") return false;
+    r.id = r.id || r.numericId || r._id;
     return (
-      r !== null &&
-      typeof r === "object" &&
       ["string", "number"].includes(typeof r.id) &&
       String(r.id).trim() !== "" &&
       typeof r.user === "string" &&
@@ -382,22 +452,7 @@
       ["Pickup", "Drop-off"].includes(r.method) &&
       typeof r.date === "string" &&
       typeof r.location === "string" &&
-      STATUSES.includes(r.status) &&
-      typeof r.createdAt === "string" &&
-      !Number.isNaN(Date.parse(r.createdAt)) &&
-      (r.qty === undefined || (Number.isFinite(r.qty) && r.qty >= 1)) &&
-      (r.phone === undefined || typeof r.phone === "string") &&
-      (r.notes === undefined || typeof r.notes === "string") &&
-      (r.history === undefined ||
-        (Array.isArray(r.history) &&
-          r.history.every(
-            (entry) =>
-              entry !== null &&
-              typeof entry === "object" &&
-              typeof entry.status === "string" &&
-              typeof entry.at === "string" &&
-              typeof entry.by === "string",
-          )))
+      STATUSES.includes(r.status)
     );
   }
 
@@ -690,14 +745,21 @@
     `<span class="pill s-${sKey(status)}">${esc(status)}</span>`;
 
   function requestRow(r, withRequester) {
+    const isOwner = !isAdmin() && String(r.email).toLowerCase() === state.user.email.toLowerCase();
+    const canCancel = isOwner && r.status === "Pending";
     return `<tr class="row-link" tabindex="0" data-open="${esc(r.id)}">
       <td><span class="id">${esc(displayId(r.id))}</span><span class="sub">${esc(fmtDate(r.createdAt))}</span></td>
-      ${withRequester ? `<td class="col-requester">${esc(r.user)}<span class="sub">${esc(r.email || "")}</span></td>` : ""}
-      <td>${esc(r.category)}${r.qty > 1 ? `<span class="sub">Quantity ${esc(r.qty)}</span>` : ""}</td>
+      ${withRequester ? `<td class="col-requester"><strong>${esc(r.user)}</strong><span class="sub">${esc(r.email || "")}</span></td>` : ""}
+      <td><strong>${esc(r.category)}</strong>${r.qty > 1 ? `<span class="sub">Qty: ${esc(r.qty)}</span>` : ""}</td>
       <td class="method">${esc(r.method)}</td>
       <td class="num">${esc(fmtDate(r.date))}</td>
       <td class="col-location"><div class="clip" title="${esc(r.location)}">${esc(r.location)}</div></td>
-      <td>${pill(r.status)}</td>
+      <td>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          ${pill(r.status)}
+          ${canCancel ? `<button class="btn btn-sm btn-ghost-danger tbl-action-btn" type="button" data-cancel-row="${esc(r.id)}" title="Cancel request">Cancel</button>` : ""}
+        </div>
+      </td>
     </tr>`;
   }
 
@@ -748,12 +810,59 @@
     return buckets;
   }
 
+  function updateSustainabilityAndPipeline(mine, count, done) {
+    // Environmental Calculations
+    const totalWeight = mine.reduce((sum, r) => sum + (r.actualWeight || r.estimatedWeight || (r.qty || 1) * 2.8), 0);
+    const completedWeight = mine.filter((r) => r.status === "Completed").reduce((sum, r) => sum + (r.actualWeight || r.estimatedWeight || (r.qty || 1) * 2.8), 0);
+    const co2Saved = Math.round(completedWeight * 1.44);
+    const metalsGrams = Math.round(completedWeight * 135);
+    const recoveryRate = mine.length ? Math.round((done / mine.length) * 100) : 100;
+
+    if ($("statEwaste")) $("statEwaste").innerHTML = `${Math.round(totalWeight * 10) / 10}<small>kg</small>`;
+    if ($("statCo2")) $("statCo2").innerHTML = `${co2Saved}<small>kg</small>`;
+    if ($("statMetals")) $("statMetals").innerHTML = `${metalsGrams}<small>g</small>`;
+    if ($("statRate")) $("statRate").innerHTML = `${recoveryRate}<small>%</small>`;
+
+    // Pipeline funnel
+    const pipelineSteps = [
+      { name: "Pending Review", status: "Pending", color: "#f5ac32" },
+      { name: "Approved", status: "Approved", color: "#12aaa0" },
+      { name: "Scheduled", status: "Scheduled", color: "#3679ed" },
+      { name: "Collected", status: "Collected", color: "#32b66a" },
+      { name: "Processing", status: "Processing", color: "#784be8" },
+      { name: "Completed", status: "Completed", color: "#22a879" },
+    ];
+
+    if ($("pipelineTrack")) {
+      $("pipelineTrack").innerHTML = pipelineSteps.map((step) => {
+        const cnt = count((r) => r.status === step.status);
+        return `<div class="pipeline-step" data-pipeline-status="${step.status}" style="--step-color: ${step.color}">
+          <div class="pipeline-step-top">
+            <span class="pipeline-step-num">${cnt}</span>
+            <span class="pipeline-step-dot"></span>
+          </div>
+          <div class="pipeline-step-name">${step.name}</div>
+        </div>`;
+      }).join("");
+
+      $("pipelineTrack").querySelectorAll(".pipeline-step").forEach((el) => {
+        el.addEventListener("click", () => {
+          const st = el.dataset.pipelineStatus;
+          $("statusFilter").value = st;
+          location_hash("#/requests");
+        });
+      });
+    }
+  }
+
   function renderOverview() {
     const mine = myRequests();
     const count = (fn) => mine.filter(fn).length;
     const pending = count((r) => r.status === "Pending");
     const active = count((r) => IN_PROGRESS.includes(r.status));
     const done = count((r) => r.status === "Completed");
+
+    updateSustainabilityAndPipeline(mine, count, done);
 
     if (isAdmin()) {
       $("kpis").innerHTML =
@@ -921,6 +1030,8 @@
    * Requests list
    * ------------------------------------------------------------------ */
   let controlsReady = false;
+  let activeTabFilter = "all";
+
   function setupStaticControls() {
     if (controlsReady) {
       refreshStatusFilter();
@@ -939,11 +1050,41 @@
       if (state.view === "requests") renderRequests();
       else location_hash("#/requests");
     });
-    $("statusFilter").addEventListener("change", renderRequests);
+    $("statusFilter").addEventListener("change", () => {
+      activeTabFilter = $("statusFilter").value;
+      updateFilterTabsUI();
+      renderRequests();
+    });
     $("methodFilter").addEventListener("change", renderRequests);
     $("exportCsv").addEventListener("click", exportCsv);
+
+    // Setup filter tab buttons
+    const tabs = document.querySelectorAll("#requestFilterTabs .filter-tab");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        activeTabFilter = tab.dataset.status;
+        updateFilterTabsUI();
+        if (activeTabFilter === "all") {
+          $("statusFilter").value = "all";
+        } else if (activeTabFilter === "In Progress") {
+          $("statusFilter").value = "all";
+        } else {
+          $("statusFilter").value = activeTabFilter;
+        }
+        renderRequests();
+      });
+    });
+
     refreshStatusFilter();
   }
+
+  function updateFilterTabsUI() {
+    const tabs = document.querySelectorAll("#requestFilterTabs .filter-tab");
+    tabs.forEach((tab) => {
+      tab.classList.toggle("is-active", tab.dataset.status === activeTabFilter);
+    });
+  }
+
   function refreshStatusFilter() {
     $("statusFilter").innerHTML =
       `<option value="all">All statuses</option>` +
@@ -959,11 +1100,15 @@
     const st = $("statusFilter").value;
     const me = $("methodFilter").value;
     return myRequests()
-      .filter(
-        (r) =>
-          (st === "all" || r.status === st) &&
-          (me === "all" || r.method === me),
-      )
+      .filter((r) => {
+        if (activeTabFilter === "In Progress") {
+          return IN_PROGRESS.includes(r.status);
+        }
+        if (activeTabFilter !== "all" && r.status !== activeTabFilter) {
+          return false;
+        }
+        return (st === "all" || r.status === st) && (me === "all" || r.method === me);
+      })
       .filter(
         (r) =>
           !q ||
@@ -990,6 +1135,16 @@
     document.querySelector(".col-requester").hidden = !withReq;
     const rows = filteredRequests();
     const total = myRequests().length;
+    const mine = myRequests();
+    const count = (fn) => mine.filter(fn).length;
+
+    // Update filter tab counters
+    if ($("badgeAll")) $("badgeAll").textContent = total;
+    if ($("badgePending")) $("badgePending").textContent = count((r) => r.status === "Pending");
+    if ($("badgeActive")) $("badgeActive").textContent = count((r) => IN_PROGRESS.includes(r.status));
+    if ($("badgeCompleted")) $("badgeCompleted").textContent = count((r) => r.status === "Completed");
+    if ($("badgeCancelled")) $("badgeCancelled").textContent = count((r) => ["Rejected", "Cancelled"].includes(r.status));
+
     $("requestCount").textContent =
       `${rows.length} of ${total} ${total === 1 ? "request" : "requests"}`;
     $("requestsBody").innerHTML = rows.length
@@ -1087,9 +1242,11 @@
     $("drawerSub").innerHTML = pill(r.status);
     const hist = [...(r.history || [])].reverse();
     const canCancel = !isAdmin() && r.status === "Pending";
+    const estWeight = r.actualWeight || r.estimatedWeight || (r.qty || 1) * 2.8;
+
     $("drawerBody").innerHTML = `
       <dl class="dl">
-        <dt>Requester</dt><dd>${esc(r.user)}<br /><span class="hint">${esc(r.email || "")}${r.phone ? ` · ${esc(r.phone)}` : ""}</span></dd>
+        <dt>Requester</dt><dd><strong>${esc(r.user)}</strong><br /><span class="hint">${esc(r.email || "")}${r.phone ? ` · ${esc(r.phone)}` : ""}</span></dd>
         <dt>Category</dt><dd>${esc(r.category)}${r.qty ? ` · Quantity ${esc(r.qty)}` : ""}</dd>
         <dt>Method</dt><dd>${esc(r.method)}</dd>
         <dt>${r.method === "Drop-off" ? "Drop-off date" : "Pickup date"}</dt><dd>${esc(fmtDate(r.date))}</dd>
@@ -1097,10 +1254,29 @@
         ${r.notes ? `<dt>Notes</dt><dd>${esc(r.notes)}</dd>` : ""}
         <dt>Submitted</dt><dd>${esc(fmtDateTime(r.createdAt))}</dd>
       </dl>
-      <h3>History</h3>
+
+      ${
+        r.status === "Completed"
+          ? `
+        <div class="estimator-box" style="margin: 16px 0 20px;">
+          <div class="estimator-head">
+            <svg class="i"><use href="#i-check" /></svg>
+            <span>Circularity & Recovery Certificate</span>
+          </div>
+          <div class="estimator-stats">
+            <div class="estimator-stat"><strong>${estWeight} kg</strong><span>Materials Diverted</span></div>
+            <div class="estimator-stat"><strong>${Math.round(estWeight * 1.44)} kg</strong><span>CO₂ Avoided</span></div>
+            <div class="estimator-stat"><strong>${Math.round(estWeight * 120)} g</strong><span>Metals Recovered</span></div>
+          </div>
+        </div>`
+          : ""
+      }
+
+      <h3>Tracking Timeline & Audit Log</h3>
       <ol class="timeline">
-        ${hist.map((h) => `<li><strong>${esc(h.status)}</strong><small>${esc(fmtDateTime(h.at))}${h.by ? ` · ${esc(h.by)}` : ""}</small></li>`).join("")}
+        ${hist.map((h) => `<li><strong>${esc(h.status)}</strong><small>${esc(fmtDateTime(h.at))}${h.by ? ` · by ${esc(h.by)}` : ""}${h.note ? ` (${esc(h.note)})` : ""}</small></li>`).join("")}
       </ol>
+
       ${
         isAdmin()
           ? `
@@ -1151,6 +1327,53 @@
     $("fDropField").hidden = !drop;
     $("fDateLabel").textContent = drop ? "Drop-off date" : "Pickup date";
   }
+  let formControlsReady = false;
+
+  function updateCategoryGuidance() {
+    const catName = $("fCategory").value;
+    const cat = CATEGORIES.find((c) => c.name === catName);
+    const tipEl = $("categorySafetyTip");
+    const tipText = $("categorySafetyText");
+    if (tipEl && tipText) {
+      if (cat && cat.note) {
+        tipText.innerHTML = `<strong>${esc(cat.name)} safety note:</strong> ${esc(cat.note)}. Keep items intact and separate.`;
+        tipEl.hidden = false;
+      } else {
+        tipEl.hidden = true;
+      }
+    }
+    updateImpactEstimator();
+  }
+
+  function updateImpactEstimator() {
+    const catName = $("fCategory")?.value;
+    const qty = Math.max(1, parseInt($("fQty")?.value, 10) || 1);
+    const catWeights = {
+      Computers: 6.5,
+      "Mobile phones": 0.3,
+      Batteries: 0.5,
+      Televisions: 14.0,
+      Printers: 7.0,
+      Cables: 0.8,
+      "Game consoles": 3.2,
+      "Audio equipment": 2.4,
+      Cameras: 0.9,
+      "Small appliances": 2.2,
+      "Networking equipment": 1.1,
+      Wearables: 0.2,
+      "Lamps and lighting": 0.4,
+      "Other small electronics": 0.6,
+    };
+    const avgW = catWeights[catName] || 2.5;
+    const weight = Math.round(qty * avgW * 10) / 10;
+    const co2 = Math.round(weight * 1.44 * 10) / 10;
+    const metals = Math.round(weight * 125);
+
+    if ($("estWeight")) $("estWeight").textContent = `~${weight} kg`;
+    if ($("estCo2")) $("estCo2").textContent = `~${co2} kg CO₂`;
+    if ($("estRecovered")) $("estRecovered").textContent = `~${metals} g`;
+  }
+
   function prepareForm() {
     if (isAdmin()) return;
     $("fName").value = state.user.name;
@@ -1174,6 +1397,25 @@
     }
     applyMethod();
     $("requestError").textContent = "";
+
+    if (!formControlsReady) {
+      formControlsReady = true;
+      $("fCategory").addEventListener("change", updateCategoryGuidance);
+      $("fQty").addEventListener("input", updateImpactEstimator);
+
+      // Wire quick date chips
+      const chips = document.querySelectorAll("#quickDateChips .date-chip");
+      chips.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const days = parseInt(btn.dataset.days, 10) || 1;
+          const d = new Date();
+          d.setDate(d.getDate() + days);
+          $("fDate").value = d.toISOString().slice(0, 10);
+        });
+      });
+    }
+
+    updateCategoryGuidance();
   }
   let pendingDrop = "";
   let pendingCategory = "";
@@ -1646,6 +1888,7 @@
   }
 
   function popupHtml(p) {
+    const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
     return `<div class="pop">
       <strong>${esc(p.name)}</strong>
       <span class="pop-type">${esc(KINDS[p.kind].label)} · ${esc(fmtDist(p.distance))} away</span>
@@ -1653,8 +1896,9 @@
       ${p.phone ? `<p>Phone: <a href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${esc(p.phone)}</a></p>` : ""}
       ${p.hours ? `<p>Hours: ${esc(p.hours)}</p>` : ""}
       <div class="pop-actions">
-        ${state.user?.role === "user" ? `<button class="btn" type="button" data-use="${esc(p.key)}">Use for drop-off request</button>` : ""}
-        <a class="alt" href="${esc(p.osm)}" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+        ${state.user?.role === "user" ? `<button class="btn" type="button" data-use="${esc(p.key)}">Use for drop-off</button>` : ""}
+        <a class="btn" href="${dirUrl}" target="_blank" rel="noopener noreferrer">Directions ↗</a>
+        <a class="alt" href="${esc(p.osm)}" target="_blank" rel="noopener noreferrer">OSM</a>
       </div>
     </div>`;
   }
@@ -1711,6 +1955,7 @@
 
   function placeItemHtml(p) {
     const k = KINDS[p.kind];
+    const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
     return `<li class="place ${k.cls}" data-place="${esc(p.key)}" tabindex="0">
       <div class="place-top"><span class="place-name">${esc(p.name)}</span><span class="place-dist">${esc(fmtDist(p.distance))}</span></div>
       <div class="place-type"><i></i>${esc(k.label)}</div>
@@ -1719,7 +1964,10 @@
         ${p.phone ? `<a href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${icon("phone")}${esc(p.phone)}</a>` : ""}
         ${p.hours ? `<span>${icon("clock")}${esc(p.hours)}</span>` : ""}
       </div>
-      ${state.user?.role === "user" ? `<div class="place-actions"><button class="btn btn-sm" type="button" data-use="${esc(p.key)}">Use for drop-off request</button></div>` : ""}
+      <div class="place-actions">
+        ${state.user?.role === "user" ? `<button class="btn btn-sm btn-primary" type="button" data-use="${esc(p.key)}">Use for drop-off</button>` : ""}
+        <a class="btn btn-sm" href="${dirUrl}" target="_blank" rel="noopener noreferrer">Directions ↗</a>
+      </div>
     </li>`;
   }
 
@@ -1807,6 +2055,19 @@
         $("authSubmit").focus();
       }),
     );
+    const togglePass = $("togglePasswordBtn");
+    if (togglePass) {
+      togglePass.addEventListener("click", () => {
+        const passInput = $("authPassword");
+        const iconUse = $("eyeIconUse") || togglePass.querySelector("use");
+        const isSecret = passInput.type === "password";
+        passInput.type = isSecret ? "text" : "password";
+        togglePass.setAttribute("aria-label", isSecret ? "Hide password" : "Show password");
+        if (iconUse) {
+          iconUse.setAttribute("href", isSecret ? "#i-eye-off" : "#i-eye");
+        }
+      });
+    }
     $("logoutButton").addEventListener("click", () => void endSession());
     $("themeToggle").addEventListener("click", () =>
       setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"),
@@ -1920,6 +2181,27 @@
       if (cat) {
         pendingCategory = cat.dataset.category;
         location_hash("#/new");
+        return;
+      }
+      const cancelBtn = e.target.closest("[data-cancel-row]");
+      if (cancelBtn) {
+        e.stopPropagation();
+        const reqId = cancelBtn.dataset.cancelRow;
+        const r = findRequest(reqId);
+        if (r) {
+          confirmDialog({
+            title: `Cancel ${displayId(r.id)}?`,
+            text: "This collection request will be marked as cancelled.",
+          }).then(async (ok) => {
+            if (!ok) return;
+            try {
+              if (await setStatus(r, "Cancelled"))
+                afterChange(`${displayId(r.id)} cancelled`);
+            } catch (error) {
+              toast(`Could not cancel request: ${error.message}`, "error");
+            }
+          });
+        }
         return;
       }
       const open = e.target.closest("[data-open]");
