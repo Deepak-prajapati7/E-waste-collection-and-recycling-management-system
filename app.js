@@ -505,10 +505,10 @@
     $("authPassword").autocomplete = signup
       ? "new-password"
       : "current-password";
-    $("authPassword").minLength = signup ? 8 : 6;
+    $("authPassword").minLength = 8;
     $("authPassword").placeholder = signup
       ? "At least 8 characters"
-      : "Demo password: demo1234";
+      : "Enter your password";
     $("authRole").disabled = signup;
     if (signup) $("authRole").value = "user";
     for (const [id, active] of [
