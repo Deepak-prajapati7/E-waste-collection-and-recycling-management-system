@@ -19,8 +19,9 @@
     <meta http-equiv="preconnect" href="https://overpass.openstreetmap.fr" />
     <meta http-equiv="preconnect" href="https://basemaps.cartocdn.com" />
     <link rel="icon" href="Assest/logo.jpeg" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-    <link rel="stylesheet" href="styles.css?v=8" />
+    <link rel="stylesheet" href="styles.css?v=12" />
   </head>
   <body data-theme="light">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -125,6 +126,20 @@
         <path d="M7.2 7.4 9.4 3.8a2 2 0 013.4 0l1.1 1.8M17.1 8h2.3a2 2 0 011.7 3l-1.7 3M15.2 18h-4.5l-1.2 2M5 16.1l-1.2-2.1a2 2 0 011.7-3h2" />
         <path d="m13.4 3.5.5 3-3-.4M21 11l-2.8-1.3.5 3M8 20l.2-3-2.8 1" />
       </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24">
+        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22" />
+      </symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24">
+        <path d="M12 3l1.9 4.8L18.7 9l-4.8 1.9L12 15.7 10.1 11 5.3 9l4.8-1.9L12 3zM19 16l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1zM5 16l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z" />
+      </symbol>
+      <symbol id="i-trend" viewBox="0 0 24 24">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+      </symbol>
     </svg>
 
     <!-- ============ Sign in ============ -->
@@ -215,16 +230,21 @@
             </div>
             <div class="field">
               <label for="authPassword">Password</label>
-              <input
-                id="authPassword"
-                type="password"
-                autocomplete="current-password"
-                placeholder="Demo password: demo1234"
-              />
+              <div class="input-eye-wrap">
+                <input
+                  id="authPassword"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Demo password: demo1234"
+                />
+                <button type="button" class="eye-toggle-btn" id="togglePasswordBtn" aria-label="Toggle password visibility">
+                  <svg class="i"><use href="#i-eye" id="eyeIconUse" /></svg>
+                </button>
+              </div>
             </div>
             <p class="form-error" id="authMessage" role="alert"></p>
             <button
-              class="btn btn-primary btn-block"
+              class="btn btn-primary btn-block btn-hero-glow"
               id="authSubmit"
               type="submit"
             >
@@ -233,13 +253,19 @@
           </form>
 
           <div class="demo-box">
-            <p>Demo accounts (password: demo1234)</p>
+            <div class="demo-box-head">
+              <span class="demo-sparkle">✨</span>
+              <strong>Instant Demo Access (demo1234)</strong>
+            </div>
             <div class="demo-actions">
-              <button type="button" class="btn btn-sm" data-demo="user">
-                Fill user
+              <button type="button" class="btn btn-sm btn-demo" data-demo="user">
+                <span>👤</span> Rahul (User)
               </button>
-              <button type="button" class="btn btn-sm" data-demo="admin">
-                Fill administrator
+              <button type="button" class="btn btn-sm btn-demo" data-demo="admin">
+                <span>🛡️</span> Admin (Ops)
+              </button>
+              <button type="button" class="btn btn-sm btn-demo" id="exploreMapGuestBtn" style="grid-column: 1 / -1; justify-content: center; font-weight: 600;">
+                <span>🗺️</span> Explore Recycling Map Directly
               </button>
             </div>
           </div>
@@ -305,6 +331,10 @@
             <kbd>/</kbd>
           </form>
           <div class="topbar-right">
+            <div class="backend-pill" id="backendPill" title="Server & MongoDB API Status">
+              <span class="backend-dot"></span>
+              <span class="backend-text" id="backendStatusText">MongoDB Active</span>
+            </div>
             <a class="icon-btn notification-btn" href="#/requests" aria-label="Open requests awaiting review" title="Open requests">
               <svg class="i"><use href="#i-bell" /></svg>
               <span class="notification-count" id="topbarBadge" hidden></span>
@@ -383,11 +413,77 @@
             </div>
 
             <div class="kpis" id="kpis"></div>
+
+            <!-- Sustainability Eco-Impact Tracker -->
+            <section class="impact-hero" id="impactHero" aria-label="Environmental impact metrics">
+              <div class="impact-hero-head">
+                <div class="impact-hero-title">
+                  <span class="impact-badge">🌿 Sustainability</span>
+                  <h2>Circular Environmental Impact</h2>
+                </div>
+                <div class="impact-badge" id="sustainabilityPill">Verified Circularity</div>
+              </div>
+              <div class="impact-grid" id="impactGrid">
+                <div class="impact-card">
+                  <div class="impact-card-top">
+                    <span class="impact-card-icon">⚡</span>
+                    <span class="impact-card-tag">Diverted</span>
+                  </div>
+                  <div class="impact-card-num" id="statEwaste">0<small>kg</small></div>
+                  <div class="impact-card-label">E-waste Diverted</div>
+                  <div class="impact-card-sub">Prevented hazardous landfill seepage</div>
+                </div>
+                <div class="impact-card">
+                  <div class="impact-card-top">
+                    <span class="impact-card-icon">🌱</span>
+                    <span class="impact-card-tag">Emissions</span>
+                  </div>
+                  <div class="impact-card-num" id="statCo2">0<small>kg</small></div>
+                  <div class="impact-card-label">CO₂ Offset Avoided</div>
+                  <div class="impact-card-sub">Equivalent to ~7 tree-years</div>
+                </div>
+                <div class="impact-card">
+                  <div class="impact-card-top">
+                    <span class="impact-card-icon">🪙</span>
+                    <span class="impact-card-tag">Metals</span>
+                  </div>
+                  <div class="impact-card-num" id="statMetals">0<small>g</small></div>
+                  <div class="impact-card-label">Precious Metals Saved</div>
+                  <div class="impact-card-sub">High-purity Copper, Aluminum & Gold</div>
+                </div>
+                <div class="impact-card">
+                  <div class="impact-card-top">
+                    <span class="impact-card-icon">🎯</span>
+                    <span class="impact-card-tag">Efficiency</span>
+                  </div>
+                  <div class="impact-card-num" id="statRate">100<small>%</small></div>
+                  <div class="impact-card-label">Circular Recovery Rate</div>
+                  <div class="impact-card-sub">Zero-landfill certified process</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Status Funnel Pipeline -->
+            <div class="pipeline-panel" id="pipelinePanel" aria-label="Request lifecycle stages">
+              <div class="pipeline-head">
+                <h3>Collection & Recovery Pipeline</h3>
+                <span class="fine">Click stage to filter</span>
+              </div>
+              <div class="pipeline-track" id="pipelineTrack"></div>
+            </div>
+
             <div class="grid-2" id="overviewGrid"></div>
           </section>
 
           <!-- Requests -->
           <section class="view" id="view-requests" hidden>
+            <div class="filter-tabs" id="requestFilterTabs" role="tablist" aria-label="Filter requests by status">
+              <button class="filter-tab is-active" data-status="all" type="button">All Requests <span class="tab-badge" id="badgeAll">0</span></button>
+              <button class="filter-tab" data-status="Pending" type="button">Pending Review <span class="tab-badge" id="badgePending">0</span></button>
+              <button class="filter-tab" data-status="In Progress" type="button">In Progress <span class="tab-badge" id="badgeActive">0</span></button>
+              <button class="filter-tab" data-status="Completed" type="button">Completed <span class="tab-badge" id="badgeCompleted">0</span></button>
+              <button class="filter-tab" data-status="Cancelled" type="button">Cancelled <span class="tab-badge" id="badgeCancelled">0</span></button>
+            </div>
             <div class="toolbar">
               <div class="search">
                 <svg class="i"><use href="#i-search" /></svg>
@@ -455,6 +551,34 @@
                     <label for="fQty">Quantity</label>
                     <input id="fQty" type="number" min="1" max="99" value="1" />
                   </div>
+                  <div class="field span-2" id="categorySafetyTip" hidden>
+                    <div class="safety-tip-banner">
+                      <svg class="i"><use href="#i-alert" /></svg>
+                      <div id="categorySafetyText"></div>
+                    </div>
+                  </div>
+                  <div class="field span-2" id="impactEstimatorBox">
+                    <div class="estimator-box">
+                      <div class="estimator-head">
+                        <svg class="i"><use href="#i-recycle" /></svg>
+                        <span>Estimated Environmental Value</span>
+                      </div>
+                      <div class="estimator-stats">
+                        <div class="estimator-stat">
+                          <strong id="estWeight">~2.5 kg</strong>
+                          <span>Approx. E-Waste Weight</span>
+                        </div>
+                        <div class="estimator-stat">
+                          <strong id="estCo2">~3.5 kg CO₂</strong>
+                          <span>Carbon Emission Savings</span>
+                        </div>
+                        <div class="estimator-stat">
+                          <strong id="estRecovered">~300 g</strong>
+                          <span>Recoverable Copper & Metals</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <fieldset class="field span-2 segmented">
                     <legend>Collection method</legend>
                     <label
@@ -476,6 +600,11 @@
                   <div class="field">
                     <label for="fDate" id="fDateLabel">Pickup date</label>
                     <input id="fDate" type="date" />
+                    <div class="date-chips" id="quickDateChips">
+                      <button type="button" class="date-chip" data-days="1">Tomorrow</button>
+                      <button type="button" class="date-chip" data-days="3">In 3 days</button>
+                      <button type="button" class="date-chip" data-days="7">Next week</button>
+                    </div>
                   </div>
                   <div class="field">
                     <label for="fPhone">Phone (optional)</label>
@@ -754,7 +883,12 @@
 
     <div class="toasts" id="toasts" aria-live="polite"></div>
 
-    <script defer src="vendor/leaflet/leaflet.js"></script>
-    <script defer src="app.js?v=10"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+      if (typeof L === 'undefined') {
+        document.write('<script src="vendor/leaflet/leaflet.js"><\/script>');
+      }
+    </script>
+    <script defer src="app.js?v=12"></script>
   </body>
 </html>
