@@ -163,15 +163,32 @@ app.use((req, res, next) => {
 });
 
 // ---------------------------------------------------------------------
-// 6. Start Server
+// 6. Start Server (with automatic port conflict fallback)
 // ---------------------------------------------------------------------
-const server = app.listen(PORT, () => {
-  console.log(`\n======================================================`);
-  console.log(`  🚀 EcoCycle E-Waste Platform Server Started`);
-  console.log(`  🌐 Frontend & API: http://localhost:${PORT}`);
-  console.log(`  📊 Health check:   http://localhost:${PORT}/api/health`);
-  console.log(`  🗄️ Database:       MongoDB (Mongoose v${mongoose.version})`);
-  console.log(`======================================================\n`);
-});
+let server;
+function startServer(port) {
+  server = app.listen(port, () => {
+    console.log(`\n======================================================`);
+    console.log(`  🚀 EcoCycle E-Waste Platform Server Started`);
+    console.log(`  🌐 Frontend & API: http://localhost:${port}`);
+    console.log(`  📊 Health check:   http://localhost:${port}/api/health`);
+    console.log(`  🗄️ Database:       MongoDB (Mongoose v${mongoose.version})`);
+    console.log(`======================================================\n`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      const nextPort = Number(port) + 1;
+      console.warn(`⚠️ Port ${port} is occupied (common on macOS AirPlay / ControlCenter). Automatically switching to port ${nextPort}...`);
+      startServer(nextPort);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+
+  return server;
+}
+
+startServer(Number(PORT));
 
 module.exports = { app, server };

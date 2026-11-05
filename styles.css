@@ -983,7 +983,22 @@ select {
 .k-scrap { --dot: #b7791f; }
 .origin-pin { width: 18px; height: 18px; border-radius: 50%; background: #10b981; border: 3px solid #fff; box-shadow: 0 0 0 2px #0f5a47, 0 2px 6px rgba(0,0,0,.45); }
 
-.leaflet-container { font-family: var(--font); font-size: 13px; background: var(--surface-2); }
+.leaflet-container {
+  font-family: var(--font);
+  font-size: 13px;
+  background-color: #e6eee9;
+  background-image:
+    linear-gradient(rgba(15, 90, 71, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 90, 71, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+[data-theme="dark"] .leaflet-container {
+  background-color: #121d24;
+  background-image:
+    linear-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
 .leaflet-popup-content-wrapper { border-radius: var(--radius); color: #17212b; background: var(--glass-bg-strong); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: var(--glass-specular), 0 8px 24px rgba(0, 0, 0, 0.15); }
 .leaflet-popup-content { margin: 12px 14px; min-width: 200px; line-height: 1.45; }
 .pop strong { display: block; font-size: 14px; font-weight: 600; }
