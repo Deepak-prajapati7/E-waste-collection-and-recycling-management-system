@@ -98,6 +98,23 @@
     },
   ];
 
+  const CATEGORY_ICONS = {
+    Computers: "💻",
+    "Mobile phones": "📱",
+    Batteries: "🔋",
+    Televisions: "📺",
+    Printers: "🖨️",
+    Cables: "🔌",
+    "Game consoles": "🎮",
+    "Audio equipment": "🎧",
+    Cameras: "📷",
+    "Small appliances": "⚡",
+    "Networking equipment": "🌐",
+    Wearables: "⌚",
+    "Lamps and lighting": "💡",
+    "Other small electronics": "📦",
+  };
+
   const STATUSES = [
     "Pending",
     "Approved",

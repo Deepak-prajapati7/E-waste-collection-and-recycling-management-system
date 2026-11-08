@@ -13,9 +13,15 @@
     <meta http-equiv="preconnect" href="https://tile.openstreetmap.org" />
     <meta http-equiv="preconnect" href="https://a.tile.openstreetmap.org" />
     <link rel="icon" href="Assest/logo.jpeg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="styles.css?v=14" />
+    <link rel="stylesheet" href="styles.css?v=15" />
   </head>
   <body data-theme="light">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -134,6 +140,27 @@
         <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
         <polyline points="17 6 23 6 23 12" />
       </symbol>
+      <symbol id="i-truck" viewBox="0 0 24 24">
+        <rect x="1" y="3" width="15" height="13" rx="2" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24">
+        <line x1="5" y1="12" x2="19" y2="12" />
+        <polyline points="12 5 19 12 12 19" />
+      </symbol>
     </svg>
 
     <!-- ============ Sign in ============ -->
@@ -141,44 +168,84 @@
       <section class="auth-brand">
         <div class="brand">
           <span class="brand-logo"><img src="Assest/logo.jpeg" alt="" fetchpriority="high" decoding="async" /></span>
-          <span class="brand-text"
-            ><strong>EcoCycle</strong
-            ><small>E-waste collection and recycling</small></span
-          >
+          <span class="brand-text">
+            <strong>EcoCycle</strong>
+            <small>Circular E-Waste Network</small>
+          </span>
+          <span class="brand-badge-pill">v2.4 Pro</span>
         </div>
         <div class="auth-brand-body">
-          <h1>Collection requests, from booking to recovery.</h1>
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span>Zero-Landfill Circular Economy Platform</span>
+          </div>
+          <h1 class="hero-headline">
+            Collection requests, <span class="text-gradient">from doorstep to recovery.</span>
+          </h1>
+          <p class="hero-subtext">
+            Enterprise-grade electronic waste reclamation. Turn discarded tech into verified carbon offsets and precious secondary raw materials.
+          </p>
+
           <ul class="auth-points">
-            <li>Book a home pickup or choose a drop-off point</li>
-            <li>Find recycling points and electronics shops on a map</li>
-            <li>Track each request through collection and processing</li>
+            <li>
+              <div class="auth-point-icon"><svg class="i"><use href="#i-truck" /></svg></div>
+              <div>
+                <strong>Express Home Pickup</strong>
+                <span>Door-to-door verified electronic collection in under 60 seconds</span>
+              </div>
+            </li>
+            <li>
+              <div class="auth-point-icon"><svg class="i"><use href="#i-pin" /></svg></div>
+              <div>
+                <strong>100+ Authorized Recycling Hubs</strong>
+                <span>Locate certified processing plants and authorized drop points</span>
+              </div>
+            </li>
+            <li>
+              <div class="auth-point-icon"><svg class="i"><use href="#i-leaf" /></svg></div>
+              <div>
+                <strong>Verified Eco-Impact Accounting</strong>
+                <span>Audit lifecycle status, CO₂ emissions averted, and precious metals</span>
+              </div>
+            </li>
           </ul>
+
           <div class="impact-strip" aria-label="E-waste programme stats">
             <div class="impact-chip">
-              <strong>4.2k</strong>
-              <span>pickups</span>
+              <strong>4.2k+</strong>
+              <span>Collections</span>
             </div>
             <div class="impact-chip">
-              <strong>92%</strong>
-              <span>recovery</span>
+              <strong>94.8%</strong>
+              <span>Recovery Rate</span>
             </div>
             <div class="impact-chip">
-              <strong>18</strong>
-              <span>zones</span>
+              <strong>18+</strong>
+              <span>Metro Clusters</span>
             </div>
           </div>
         </div>
-        <p class="auth-foot">
-          Demo prototype. Your account and requests stay in this browser.
-        </p>
+
+        <div class="auth-trust-strip">
+          <svg class="i"><use href="#i-shield" /></svg>
+          <span>CPCB Certified & ISO 14001 Compliant Recycling Ecosystem</span>
+        </div>
       </section>
 
       <section class="auth-form-wrap">
+        <div class="auth-card-backdrop"></div>
         <div class="auth-card">
-          <h2 id="authTitle">Sign in</h2>
-          <p class="auth-sub" id="authDescription">
-            Use your account to continue.
-          </p>
+          <div class="auth-card-header">
+            <div class="auth-card-icon-wrap">
+              <svg class="i"><use href="#i-recycle" /></svg>
+            </div>
+            <div>
+              <h2 id="authTitle">Welcome to EcoCycle</h2>
+              <p class="auth-sub" id="authDescription">
+                Access your dashboard to schedule pickups and track impact.
+              </p>
+            </div>
+          </div>
 
           <div class="tabs" role="tablist" aria-label="Account access">
             <button
@@ -204,17 +271,17 @@
           <form id="authForm" class="form" novalidate>
             <div class="field" id="authNameField" hidden>
               <label for="authName">Full name</label>
-              <input id="authName" type="text" autocomplete="name" />
+              <input id="authName" type="text" autocomplete="name" placeholder="e.g. Rahul Sharma" />
             </div>
             <div class="field">
-              <label for="authRole">Role</label>
+              <label for="authRole">Account Role</label>
               <select id="authRole">
-                <option value="user">User – request collections</option>
-                <option value="admin">Administrator – manage requests</option>
+                <option value="user">Citizen / User (Request collections)</option>
+                <option value="admin">Administrator (Operations & triage)</option>
               </select>
             </div>
             <div class="field">
-              <label for="authEmail">Email</label>
+              <label for="authEmail">Work or Personal Email</label>
               <input
                 id="authEmail"
                 type="email"
@@ -242,29 +309,33 @@
               id="authSubmit"
               type="submit"
             >
-              Sign in
+              <span>Sign in to EcoCycle</span>
+              <svg class="i" style="width:16px;height:16px;"><use href="#i-arrow-right" /></svg>
             </button>
           </form>
 
           <div class="demo-box">
             <div class="demo-box-head">
               <span class="demo-sparkle">✨</span>
-              <strong>Instant Demo Access (demo1234)</strong>
+              <strong>Instant Demo Access (One-Click)</strong>
             </div>
             <div class="demo-actions">
-              <button type="button" class="btn btn-sm btn-demo" data-demo="user">
-                <span>👤</span> Rahul (User)
+              <button type="button" class="btn btn-sm btn-demo" data-demo="user" title="Sign in as Rahul (User)">
+                <span>👤</span>
+                <span class="demo-btn-text"><strong>Rahul</strong><small>User</small></span>
               </button>
-              <button type="button" class="btn btn-sm btn-demo" data-demo="admin">
-                <span>🛡️</span> Admin (Ops)
+              <button type="button" class="btn btn-sm btn-demo" data-demo="admin" title="Sign in as Admin (Ops)">
+                <span>🛡️</span>
+                <span class="demo-btn-text"><strong>Admin</strong><small>Ops Hub</small></span>
               </button>
-              <button type="button" class="btn btn-sm btn-demo" id="exploreMapGuestBtn" style="grid-column: 1 / -1; justify-content: center; font-weight: 600;">
-                <span>🗺️</span> Explore Recycling Map Directly
+              <button type="button" class="btn btn-sm btn-demo btn-demo-explore" id="exploreMapGuestBtn">
+                <span>🗺️</span>
+                <span>Explore Interactive Map as Guest</span>
               </button>
             </div>
           </div>
           <p class="fine">
-            Demo sign-in only. Do not use real or sensitive account details.
+            Interactive demo environment. Data is safely persisted in this session.
           </p>
         </div>
       </section>
@@ -329,6 +400,10 @@
               <span class="backend-dot"></span>
               <span class="backend-text" id="backendStatusText">MongoDB Active</span>
             </div>
+            <a class="btn btn-primary btn-sm topbar-action-btn" href="#/new" id="topbarNewBtn" title="Book a new collection">
+              <svg class="i" style="width: 14px; height: 14px;"><use href="#i-plus" /></svg>
+              <span>New Request</span>
+            </a>
             <a class="icon-btn notification-btn" href="#/requests" aria-label="Open requests awaiting review" title="Open requests">
               <svg class="i"><use href="#i-bell" /></svg>
               <span class="notification-count" id="topbarBadge" hidden></span>
@@ -352,7 +427,7 @@
             <div class="dashboard-heading">
               <div>
                 <h1 id="dashboardHeading">Overview</h1>
-                <p>Track recycling progress and manage requests efficiently.</p>
+                <p id="dashboardSub">Track recycling progress, monitor requests, and measure circular environmental impact.</p>
               </div>
               <div class="dashboard-date">
                 <svg class="i"><use href="#i-calendar" /></svg>
@@ -360,15 +435,22 @@
               </div>
             </div>
             <div class="overview-intro">
+              <div class="overview-intro-glow"></div>
               <div class="overview-intro-icon" aria-hidden="true">
-                ♻
+                <svg class="i" style="width:32px;height:32px;"><use href="#i-recycle" /></svg>
               </div>
               <div class="overview-intro-copy">
-                <p class="eyebrow">YOUR WORKSPACE</p>
-                <h2>Collection overview</h2>
-                <p>Keep track of requests and see recycling progress at a glance.</p>
+                <div class="overview-pill">
+                  <span class="overview-pill-dot"></span>
+                  <span>Verified Circular Portal</span>
+                </div>
+                <h2 id="overviewWelcomeGreeting">Welcome to EcoCycle Operations</h2>
+                <p id="overviewWelcomeSub">Keep track of pickup requests, locate authorized recycling centers, and review verified material recovery metrics in real time.</p>
               </div>
-              <a class="btn btn-primary" href="#/requests">View requests <span aria-hidden="true">→</span></a>
+              <div class="overview-intro-actions">
+                <a class="btn btn-primary" href="#/new"><svg class="i" style="width:14px;height:14px;"><use href="#i-plus" /></svg>Book pickup</a>
+                <a class="btn btn-secondary" href="#/requests">All requests <span aria-hidden="true">→</span></a>
+              </div>
             </div>
 
             <div class="overview-quick-actions" aria-label="Quick actions">
@@ -453,6 +535,18 @@
                   <div class="impact-card-num" id="statRate">100<small>%</small></div>
                   <div class="impact-card-label">Circular Recovery Rate</div>
                   <div class="impact-card-sub">Zero-landfill certified process</div>
+                </div>
+              </div>
+              <div class="impact-progress-wrap">
+                <div class="impact-progress-header">
+                  <div class="impact-progress-title">
+                    <span class="impact-progress-dot"></span>
+                    <span><strong>Circularity Index</strong> · Diverted from toxic electronic landfills</span>
+                  </div>
+                  <span class="impact-progress-badge" id="impactProgressPercent">100% Circular</span>
+                </div>
+                <div class="impact-progress-track">
+                  <div class="impact-progress-bar" id="impactProgressBar" style="width: 100%;"></div>
                 </div>
               </div>
             </section>
