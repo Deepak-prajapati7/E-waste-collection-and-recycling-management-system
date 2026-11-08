@@ -848,6 +848,8 @@
     if ($("statCo2")) $("statCo2").innerHTML = `${co2Saved}<small>kg</small>`;
     if ($("statMetals")) $("statMetals").innerHTML = `${metalsGrams}<small>g</small>`;
     if ($("statRate")) $("statRate").innerHTML = `${recoveryRate}<small>%</small>`;
+    if ($("impactProgressBar")) $("impactProgressBar").style.width = `${recoveryRate}%`;
+    if ($("impactProgressPercent")) $("impactProgressPercent").textContent = `${recoveryRate}% Circular`;
 
     // Pipeline funnel
     const pipelineSteps = [
