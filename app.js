@@ -767,11 +767,17 @@
   function requestRow(r, withRequester) {
     const isOwner = !isAdmin() && String(r.email).toLowerCase() === state.user.email.toLowerCase();
     const canCancel = isOwner && r.status === "Pending";
+    const catIcon = CATEGORY_ICONS[r.category] || "📦";
     return `<tr class="row-link" tabindex="0" data-open="${esc(r.id)}">
       <td><span class="id">${esc(displayId(r.id))}</span><span class="sub">${esc(fmtDate(r.createdAt))}</span></td>
       ${withRequester ? `<td class="col-requester"><strong>${esc(r.user)}</strong><span class="sub">${esc(r.email || "")}</span></td>` : ""}
-      <td><strong>${esc(r.category)}</strong>${r.qty > 1 ? `<span class="sub">Qty: ${esc(r.qty)}</span>` : ""}</td>
-      <td class="method">${esc(r.method)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px;">
+          <span style="font-size:16px;line-height:1;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--surface-2);flex:none;">${catIcon}</span>
+          <div><strong>${esc(r.category)}</strong>${r.qty > 1 ? `<span class="sub">Qty: ${esc(r.qty)}</span>` : ""}</div>
+        </div>
+      </td>
+      <td class="method"><span style="font-weight:600;display:inline-flex;align-items:center;gap:5px;">${r.method === "Pickup" ? "🚚" : "📍"} ${esc(r.method)}</span></td>
       <td class="num">${esc(fmtDate(r.date))}</td>
       <td class="col-location"><div class="clip" title="${esc(r.location)}">${esc(r.location)}</div></td>
       <td>
