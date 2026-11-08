@@ -892,6 +892,13 @@
 
     updateSustainabilityAndPipeline(mine, count, done);
 
+    const hour = new Date().getHours();
+    const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    if ($("overviewWelcomeGreeting") && state.user) {
+      const firstName = (state.user.name || "Member").split(" ")[0];
+      $("overviewWelcomeGreeting").textContent = `${timeGreeting}, ${firstName} 👋`;
+    }
+
     if (isAdmin()) {
       $("kpis").innerHTML =
         kpi("Total requests", mine.length, "All time") +
@@ -1038,7 +1045,17 @@
           ${
             recent.length
               ? `<div class="table-wrap"><table class="tbl"><thead><tr><th scope="col">Request</th><th scope="col">Category</th><th scope="col">Date</th><th scope="col">Status</th></tr></thead><tbody>
-            ${recent.map((r) => `<tr class="row-link" tabindex="0" data-open="${esc(r.id)}"><td><span class="id">${esc(displayId(r.id))}</span></td><td>${esc(r.category)}<span class="sub">${esc(r.method)}</span></td><td class="num">${esc(fmtDate(r.date))}</td><td>${pill(r.status)}</td></tr>`).join("")}
+            ${recent.map((r) => `<tr class="row-link" tabindex="0" data-open="${esc(r.id)}">
+              <td><span class="id">${esc(displayId(r.id))}</span></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:16px;">${CATEGORY_ICONS[r.category] || "📦"}</span>
+                  <div><strong>${esc(r.category)}</strong><span class="sub">${r.method === "Pickup" ? "🚚" : "📍"} ${esc(r.method)}</span></div>
+                </div>
+              </td>
+              <td class="num">${esc(fmtDate(r.date))}</td>
+              <td>${pill(r.status)}</td>
+            </tr>`).join("")}
           </tbody></table></div>`
               : `<div class="empty"><strong>No requests yet</strong>Book a pickup or choose a drop-off point.<br /><a class="btn btn-primary" href="#/new">New request</a></div>`
           }
@@ -1513,10 +1530,16 @@
   function renderCategories() {
     $("categoryBody").innerHTML = CATEGORIES.map(
       (c) => `<tr>
-        <td><span class="cat-code" aria-hidden="true">${esc(c.code)}</span><strong style="font-weight:500">${esc(c.name)}</strong></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="cat-code" aria-hidden="true">${esc(c.code)}</span>
+            <span style="font-size:18px;line-height:1;">${CATEGORY_ICONS[c.name] || "📦"}</span>
+            <div><strong style="font-weight:650;font-size:13.5px;">${esc(c.name)}</strong></div>
+          </div>
+        </td>
         <td>${esc(c.desc)}</td>
-        <td class="method">${esc(c.note || "Standard")}</td>
-        <td class="actions">${isAdmin() ? "" : `<button class="btn btn-sm" type="button" data-category="${esc(c.name)}">Request collection</button>`}</td>
+        <td class="method">${c.note ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;background:rgba(245,158,11,0.14);color:#b45309;font-size:11.5px;font-weight:600;">⚠️ ${esc(c.note)}</span>` : '<span style="color:var(--muted);font-size:12px;">Standard Handling</span>'}</td>
+        <td class="actions">${isAdmin() ? "" : `<button class="btn btn-sm btn-primary" type="button" data-category="${esc(c.name)}">Request Pickup</button>`}</td>
       </tr>`,
     ).join("");
   }
