@@ -568,14 +568,16 @@
       const account =
         role === "user" && email === "rahul@example.com" && body.password === "demo1234"
           ? { name: "Rahul Sharma", email, role: "user" }
-          : role === "admin" && email === "admin@example.com" && body.password === "demo1234"
-            ? { name: "System Admin", email, role: "admin" }
-            : accounts.find(
-                (saved) =>
-                  saved.email === email &&
-                  saved.password === body.password &&
-                  role === "user",
-              );
+          : role === "user" && email === "priya@example.com" && body.password === "demo1234"
+            ? { name: "Priya Verma", email, role: "user" }
+            : role === "admin" && email === "admin@example.com" && body.password === "demo1234"
+              ? { name: "System Admin", email, role: "admin" }
+              : accounts.find(
+                  (saved) =>
+                    saved.email === email &&
+                    saved.password === body.password &&
+                    role === "user",
+                );
       if (!account) throw new Error("Email, role, or password is incorrect.");
       const profile = { name: account.name, email: account.email, role: account.role || role };
       writeStoredJson(STORE.session, profile);
@@ -595,6 +597,7 @@
       }
       if (
         email === "rahul@example.com" ||
+        email === "priya@example.com" ||
         email === "admin@example.com" ||
         accounts.some((saved) => saved.email === email)
       ) {
@@ -613,9 +616,15 @@
     if (method === "GET" && path === "/api/auth/session") {
       return currentProfile();
     }
+    if (path === "/api/centers") {
+      return FALLBACK_CERTIFIED_CENTERS;
+    }
+    if (path === "/api/categories") {
+      return CATEGORIES;
+    }
     const profile = currentProfile();
     if (method === "GET" && path === "/api/requests") {
-      const requests = readStoredJson(STORE.requests, []);
+      const requests = ensureOfflineRequests();
       if (!Array.isArray(requests) || !requests.every(isRequest)) {
         throw new Error("Saved collection requests are invalid. Clear this site's stored data and try again.");
       }
@@ -625,19 +634,23 @@
     }
     if (method === "POST" && path === "/api/requests") {
       if (profile.role !== "user") throw new Error("Only users can submit requests.");
-      const requests = readStoredJson(STORE.requests, []);
+      const requests = ensureOfflineRequests();
+      const cat = CATEGORIES.find((c) => c.name === String(body.category || ""));
+      const qtyNum = Number(body.qty);
+      const estimatedWeight = Number(((cat ? cat.avgWeight : 2.5) * qtyNum).toFixed(2));
       const request = {
         id: Date.now(),
         user: profile.name,
         email: profile.email,
         category: String(body.category || ""),
         method: body.method,
-        qty: Number(body.qty),
+        qty: qtyNum,
         date: String(body.date || ""),
         location: String(body.location || ""),
         notes: String(body.notes || ""),
         phone: String(body.phone || ""),
         status: "Pending",
+        estimatedWeight,
         createdAt: new Date().toISOString(),
         history: [{ status: "Pending", at: new Date().toISOString(), by: profile.name }],
       };
@@ -647,7 +660,7 @@
     }
     const requestRoute = path.match(/^\/api\/requests\/(\d+)(?:\/status)?$/);
     if (requestRoute && method === "PATCH" && path.endsWith("/status")) {
-      const requests = readStoredJson(STORE.requests, []);
+      const requests = ensureOfflineRequests();
       const request = requests.find((entry) => String(entry.id) === requestRoute[1]);
       if (!request) throw new Error("Request not found.");
       if (
@@ -665,14 +678,11 @@
     }
     if (requestRoute && method === "DELETE" && !path.endsWith("/status")) {
       if (profile.role !== "admin") throw new Error("Administrator access is required.");
-      const requests = readStoredJson(STORE.requests, []);
+      const requests = ensureOfflineRequests();
       const remaining = requests.filter((entry) => String(entry.id) !== requestRoute[1]);
       if (remaining.length === requests.length) throw new Error("Request not found.");
       writeStoredJson(STORE.requests, remaining);
       return { ok: true };
-    }
-    if (path === "/api/centers") {
-      return (typeof FALLBACK_CERTIFIED_CENTERS !== "undefined" ? FALLBACK_CERTIFIED_CENTERS : []);
     }
     throw new Error("This action is not available.");
   }
@@ -980,6 +990,7 @@
     if (view === "requests") renderRequests();
     if (view === "new") prepareForm();
     if (view === "categories") renderCategories();
+    if (view === "docs") renderDocs();
     if (view === "map") showMap();
     const main = $("main-content");
     if (main) main.setAttribute("tabindex", "-1");
@@ -1764,7 +1775,10 @@
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="cat-code" aria-hidden="true">${esc(c.code)}</span>
             <span style="font-size:18px;line-height:1;">${CATEGORY_ICONS[c.name] || "📦"}</span>
-            <div><strong style="font-weight:650;font-size:13.5px;">${esc(c.name)}</strong></div>
+            <div>
+              <strong style="font-weight:650;font-size:13.5px;">${esc(c.name)}</strong>
+              <div style="font-size:11.5px;color:var(--muted);">~${esc(c.avgWeight)} kg/unit · ${esc(c.co2PerKg)} kg CO₂/kg</div>
+            </div>
           </div>
         </td>
         <td>${esc(c.desc)}</td>
@@ -1772,6 +1786,155 @@
         <td class="actions">${isAdmin() ? "" : `<button class="btn btn-sm btn-primary" type="button" data-category="${esc(c.name)}">Request Pickup</button>`}</td>
       </tr>`,
     ).join("");
+  }
+
+  /* ------------------------------------------------------------------
+   * Project Documentation & Database Architecture (#/docs)
+   * ------------------------------------------------------------------ */
+  function renderDocs() {
+    const host = $("docsContainer");
+    if (!host) return;
+    const totalReq = state.requests.length;
+    const totalCenters = FALLBACK_CERTIFIED_CENTERS.length;
+    const dbBadge = backendStatusOnline
+      ? `<span class="docs-badge">● Live MongoDB Connected (ecocycle)</span>`
+      : `<span class="docs-badge is-warn">● Offline Browser Storage Preview (localStorage)</span>`;
+
+    host.innerHTML = `
+      <div class="docs-hero">
+        <div>
+          ${dbBadge}
+          <h2>EcoCycle Project Architecture, Database & Technical Docs</h2>
+          <p>Full-stack E-Waste Collection & Circularity Platform (<code>v1.0.0</code> · UI <code>v2.4 Pro</code>) powered by Node.js, Express 5, MongoDB + Mongoose 8, JWT RBAC, and local Leaflet v1.9.4 GIS mapping.</p>
+        </div>
+        <div class="docs-hero-actions">
+          <a class="btn btn-primary btn-sm" href="EcoCycle_Project_Documentation.pdf" target="_blank" rel="noopener">
+            <svg class="i"><use href="#i-download"/></svg>
+            <span>Open Full PDF Spec</span>
+          </a>
+          <button class="btn btn-sm" type="button" id="docsResetDemoBtn" title="Restore the 8 pre-seeded sample requests in offline storage">
+            <svg class="i"><use href="#i-recycle"/></svg>
+            <span>Restore Sample Data</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="docs-stat-row">
+        <div class="docs-stat-card">
+          <small>Primary Live Database</small>
+          <strong>MongoDB + Mongoose 8</strong>
+          <span>mongodb://127.0.0.1:27017/ecocycle (5 ODM models)</span>
+        </div>
+        <div class="docs-stat-card">
+          <small>Relational SQL Reference</small>
+          <strong>MySQL (DATABASE.sql)</strong>
+          <span>10 normalized tables + foreign keys + ER MODEL.png</span>
+        </div>
+        <div class="docs-stat-card">
+          <small>Fallback Resilience</small>
+          <strong>Memory + localStorage</strong>
+          <span>Zero-downtime offline mode (${totalReq} loaded requests)</span>
+        </div>
+        <div class="docs-stat-card">
+          <small>Catalog & GIS Hubs</small>
+          <strong>${CATEGORIES.length} Categories · ${totalCenters} Hubs</strong>
+          <span>42 Indian city coordinates in bundled Leaflet GIS</span>
+        </div>
+      </div>
+
+      <div class="docs-grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Active Database Stack & Collections</h2></div>
+          <p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.55;">
+            <strong>Which DB is used?</strong> The live application uses <strong>MongoDB</strong> via Mongoose ODM (configured by <code>MONGODB_URI</code> in <code>.env</code>). If MongoDB is unavailable, the backend falls back to in-memory arrays; if the Node server is offline, the frontend uses browser <code>localStorage</code>.
+          </p>
+          <ul class="docs-list">
+            <li><div><strong>User</strong><div style="font-size:12px;color:var(--muted);">Accounts, roles (<code>user</code>/<code>admin</code>), bcryptjs 10-round password hash</div></div><span class="docs-code">models/User.js</span></li>
+            <li><div><strong>CollectionRequest</strong><div style="font-size:12px;color:var(--muted);"><code>numericId</code>, 8-state enum lifecycle, <code>estimatedWeight</code>, audit <code>history[]</code></div></div><span class="docs-code">models/CollectionRequest.js</span></li>
+            <li><div><strong>WasteCategory</strong><div style="font-size:12px;color:var(--muted);">14 categories, unit weights (kg), carbon offset factors, precious metals</div></div><span class="docs-code">models/WasteCategory.js</span></li>
+            <li><div><strong>RecyclingCenter</strong><div style="font-size:12px;color:var(--muted);">16 verified Indian drop-off hubs with lat/lng & opening hours</div></div><span class="docs-code">models/RecyclingCenter.js</span></li>
+            <li><div><strong>RecyclingRecord</strong><div style="font-size:12px;color:var(--muted);">Post-collection recycled/disposed kg & recovered material logs</div></div><span class="docs-code">models/RecyclingRecord.js</span></li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Entity-Relationship Diagram (MySQL Reference)</h2></div>
+          <p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.55;">
+            <code>DATABASE.sql</code> defines the 10-table normalized MySQL schema (<code>Users</code>, <code>Admins</code>, <code>Waste_Categories</code>, <code>Recycling_Centers</code>, <code>Collection_Requests</code>, <code>Request_Status_History</code>, <code>Request_Items</code>, <code>Collections</code>, <code>Recycling_Records</code>, <code>Recovered_Materials</code>).
+          </p>
+          <div class="docs-er-wrap">
+            <img src="ER MODEL.png" alt="EcoCycle E-Waste Management Entity-Relationship Diagram" loading="lazy" />
+          </div>
+        </div>
+      </div>
+
+      <div class="panel flush">
+        <div class="panel-head" style="padding:18px 20px 10px;"><h2>REST API Endpoints Reference (Express 5.3.0)</h2></div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">Endpoint</th>
+                <th scope="col">Auth / Role</th>
+                <th scope="col">Behavior</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="docs-code">GET</span></td><td><code>/api/health</code></td><td>Public</td><td>Service health, MongoDB readyState, masked URI & uptime</td></tr>
+              <tr><td><span class="docs-code">POST</span></td><td><code>/api/auth/register</code></td><td>Public</td><td>Registers citizen account (always enforces <code>role: 'user'</code>) & issues 7d JWT</td></tr>
+              <tr><td><span class="docs-code">POST</span></td><td><code>/api/auth/login</code></td><td>Public</td><td>Authenticates email, password & role against MongoDB or demo users</td></tr>
+              <tr><td><span class="docs-code">GET</span></td><td><code>/api/auth/session</code></td><td>Bearer JWT</td><td>Validates JWT and returns current user profile</td></tr>
+              <tr><td><span class="docs-code">GET / POST</span></td><td><code>/api/requests</code></td><td>Bearer JWT</td><td>Lists requests (RBAC scoped) or submits new request with category weight calc</td></tr>
+              <tr><td><span class="docs-code">PATCH</span></td><td><code>/api/requests/:id/status</code></td><td>Bearer JWT</td><td>Transitions 8-stage status & appends history (users can cancel own Pending)</td></tr>
+              <tr><td><span class="docs-code">DELETE</span></td><td><code>/api/requests/:id</code></td><td>Admin Only</td><td>Permanently removes request from MongoDB & fallback store</td></tr>
+              <tr><td><span class="docs-code">GET</span></td><td><code>/api/categories</code></td><td>Public</td><td>Lists 14 e-waste categories (auto-seeds MongoDB if empty)</td></tr>
+              <tr><td><span class="docs-code">GET</span></td><td><code>/api/centers</code></td><td>Public</td><td>Lists 16 verified Indian recycling hubs with geospatial coordinates</td></tr>
+              <tr><td><span class="docs-code">GET</span></td><td><code>/api/stats</code></td><td>Bearer JWT</td><td>Computes status counts, completed weight, CO₂ avoided, Copper, Aluminum & Gold</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="docs-grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Impact Calculation & Security Safeguards</h2></div>
+          <ul class="docs-list">
+            <li><div><strong>CO₂ Emissions Avoided</strong><div style="font-size:12px;color:var(--muted);">Calculated at <code>completedWeightKg × 1.44 kg</code> CO₂ prevented per kg</div></div><span class="docs-code">1.44×</span></li>
+            <li><div><strong>Metal Recovery Formula</strong><div style="font-size:12px;color:var(--muted);">Backend: Copper ~120 g/kg, Aluminum ~140 g/kg, Gold ~35 mg/kg; UI summary ~135 g/kg</div></div><span class="docs-code">Cu/Al/Au</span></li>
+            <li><div><strong>CSV Formula-Injection Guard</strong><div style="font-size:12px;color:var(--muted);">Prefixes cells starting with <code>= + - @ \\t \\r</code> with single quote before RFC-4180 export</div></div><span class="docs-code">exportCsv()</span></li>
+            <li><div><strong>XSS & Token Protection</strong><div style="font-size:12px;color:var(--muted);">HTML output escaped via <code>esc()</code>; JWT <code>7d</code> expiry + <code>bcryptjs</code> salt(10)</div></div><span class="docs-code">JWT + Hash</span></li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Pre-Seeded Demo Accounts & Startup</h2></div>
+          <ul class="docs-list">
+            <li><div><strong>Rahul Sharma</strong> (<code>rahul@example.com</code>)<div style="font-size:12px;color:var(--muted);">Role: Citizen User · Password: <code>demo1234</code></div></div><span class="docs-code">User</span></li>
+            <li><div><strong>Priya Verma</strong> (<code>priya@example.com</code>)<div style="font-size:12px;color:var(--muted);">Role: Citizen User · Password: <code>demo1234</code></div></div><span class="docs-code">User</span></li>
+            <li><div><strong>System Admin</strong> (<code>admin@example.com</code>)<div style="font-size:12px;color:var(--muted);">Role: Operations Admin · Password: <code>demo1234</code></div></div><span class="docs-code">Admin</span></li>
+            <li><div><strong>Run Commands</strong><div style="font-size:12px;color:var(--muted);"><code>npm install</code> · <code>npm run seed</code> · <code>npm start</code> (auto-falls back port 5000 → 5001)</div></div><span class="docs-code">CLI</span></li>
+          </ul>
+        </div>
+      </div>
+    `;
+
+    const resetBtn = $("docsResetDemoBtn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", async () => {
+        if (backendStatusOnline) {
+          await loadRequests();
+          renderDocs();
+          toast("Refreshed live MongoDB / server dataset");
+          return;
+        }
+        writeStoredJson(STORE.requests, DEFAULT_OFFLINE_REQUESTS);
+        await loadRequests();
+        updateBadges();
+        renderDocs();
+        toast("Restored 8 pre-seeded sample requests in offline storage");
+      });
+    }
   }
 
   /* ------------------------------------------------------------------
