@@ -263,48 +263,138 @@ const SEED_REQUESTS = [
       { status: 'Pending', at: new Date(Date.now() - 3600000 * 4), by: 'Priya Verma', note: 'Awaiting dispatcher review' },
     ],
   },
+  {
+    numericId: 1730000004,
+    user: 'Rahul Sharma',
+    email: 'rahul@example.com',
+    category: 'Televisions',
+    method: 'Pickup',
+    qty: 1,
+    date: '2026-10-12',
+    location: 'B-14, Vaishali Nagar, Jaipur, Rajasthan',
+    phone: '9876500001',
+    notes: '43-inch LED TV with stand and remote',
+    status: 'Completed',
+    estimatedWeight: 14.0,
+    actualWeight: 13.8,
+    history: [
+      { status: 'Pending', at: new Date(Date.now() - 86400000 * 28), by: 'Rahul Sharma', note: 'Booked home pickup' },
+      { status: 'Approved', at: new Date(Date.now() - 86400000 * 27), by: 'System Admin', note: 'Crew slot confirmed' },
+      { status: 'Scheduled', at: new Date(Date.now() - 86400000 * 26), by: 'System Admin', note: 'Assigned to Van #2' },
+      { status: 'Collected', at: new Date(Date.now() - 86400000 * 25), by: 'Jaipur Hub Staff' },
+      { status: 'Processing', at: new Date(Date.now() - 86400000 * 23), by: 'Recovery Dept' },
+      { status: 'Completed', at: new Date(Date.now() - 86400000 * 21), by: 'Recovery Dept', note: 'Display panel & PCB recycled' },
+    ],
+  },
+  {
+    numericId: 1730000005,
+    user: 'Priya Verma',
+    email: 'priya@example.com',
+    category: 'Printers',
+    method: 'Drop-off',
+    qty: 2,
+    date: '2026-11-04',
+    location: 'EcoCycle Capital Circular Hub - Okhla, Delhi',
+    phone: '9876500002',
+    notes: 'LaserJet office printers, cartridges removed',
+    status: 'Processing',
+    estimatedWeight: 14.0,
+    history: [
+      { status: 'Pending', at: new Date(Date.now() - 86400000 * 9), by: 'Priya Verma' },
+      { status: 'Approved', at: new Date(Date.now() - 86400000 * 8), by: 'System Admin' },
+      { status: 'Collected', at: new Date(Date.now() - 86400000 * 7), by: 'Okhla Hub Staff' },
+      { status: 'Processing', at: new Date(Date.now() - 86400000 * 5), by: 'Recovery Dept', note: 'Sorting steel chassis & fuser assembly' },
+    ],
+  },
+  {
+    numericId: 1730000006,
+    user: 'Rahul Sharma',
+    email: 'rahul@example.com',
+    category: 'Networking equipment',
+    method: 'Drop-off',
+    qty: 4,
+    date: '2026-11-10',
+    location: 'EcoCycle Certified Hub - Jaipur Central',
+    phone: '9876500001',
+    notes: 'Dual-band Wi-Fi routers and gigabit switch',
+    status: 'Approved',
+    estimatedWeight: 4.4,
+    history: [
+      { status: 'Pending', at: new Date(Date.now() - 86400000 * 2), by: 'Rahul Sharma' },
+      { status: 'Approved', at: new Date(Date.now() - 86400000 * 1), by: 'System Admin', note: 'Drop-off window open 9 AM – 6 PM' },
+    ],
+  },
+  {
+    numericId: 1730000007,
+    user: 'Priya Verma',
+    email: 'priya@example.com',
+    category: 'Small appliances',
+    method: 'Pickup',
+    qty: 3,
+    date: '2026-10-03',
+    location: 'Sector 62, Noida, Delhi NCR',
+    phone: '9876500002',
+    notes: 'Electric kettle, toaster, and induction cooktop',
+    status: 'Completed',
+    estimatedWeight: 6.6,
+    actualWeight: 6.4,
+    history: [
+      { status: 'Pending', at: new Date(Date.now() - 86400000 * 38), by: 'Priya Verma' },
+      { status: 'Approved', at: new Date(Date.now() - 86400000 * 37), by: 'System Admin' },
+      { status: 'Collected', at: new Date(Date.now() - 86400000 * 35), by: 'Noida Field Team' },
+      { status: 'Completed', at: new Date(Date.now() - 86400000 * 33), by: 'Recovery Dept', note: 'Copper coils & heating elements recovered' },
+    ],
+  },
+  {
+    numericId: 1730000008,
+    user: 'Rahul Sharma',
+    email: 'rahul@example.com',
+    category: 'Wearables',
+    method: 'Drop-off',
+    qty: 2,
+    date: '2026-11-13',
+    location: 'VKIA Authorized E-Waste Depot - North Jaipur',
+    phone: '9876500001',
+    notes: 'Fitness trackers with original charging cradles',
+    status: 'Pending',
+    estimatedWeight: 0.4,
+    history: [
+      { status: 'Pending', at: new Date(Date.now() - 3600000 * 9), by: 'Rahul Sharma', note: 'Submitted for weekend drop-off' },
+    ],
+  },
 ];
 
-async function seedDatabase() {
-  console.log('🔄 Connecting to MongoDB at:', MONGODB_URI);
-  try {
+async function runSeed(connectNow = true) {
+  if (connectNow) {
+    console.log('🔄 Connecting to MongoDB at:', MONGODB_URI);
     await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
     console.log('✅ Connected to MongoDB successfully.');
+  }
 
-    // 1. Seed Categories
-    for (const cat of SEED_CATEGORIES) {
-      await WasteCategory.findOneAndUpdate({ name: cat.name }, cat, { upsert: true, new: true });
+  for (const cat of SEED_CATEGORIES) {
+    await WasteCategory.findOneAndUpdate({ name: cat.name }, cat, { upsert: true, new: true });
+  }
+  for (const center of SEED_CENTERS) {
+    await RecyclingCenter.findOneAndUpdate({ name: center.name }, center, { upsert: true, new: true });
+  }
+  for (const u of SEED_USERS) {
+    const exists = await User.findOne({ email: u.email });
+    if (!exists) {
+      await new User(u).save();
     }
-    console.log(`✅ Seeded ${SEED_CATEGORIES.length} Waste Categories.`);
-
-    // 2. Seed Recycling Centers
-    for (const center of SEED_CENTERS) {
-      await RecyclingCenter.findOneAndUpdate({ name: center.name }, center, { upsert: true, new: true });
+  }
+  for (const req of SEED_REQUESTS) {
+    const exists = await CollectionRequest.findOne({ numericId: req.numericId });
+    if (!exists) {
+      await new CollectionRequest(req).save();
     }
-    console.log(`✅ Seeded ${SEED_CENTERS.length} Recycling Centers.`);
+  }
+}
 
-    // 3. Seed Users
-    for (const u of SEED_USERS) {
-      const exists = await User.findOne({ email: u.email });
-      if (!exists) {
-        const newUser = new User(u);
-        await newUser.save();
-        console.log(`  👤 Created user: ${u.email} (${u.role})`);
-      } else {
-        console.log(`  👤 User already exists: ${u.email}`);
-      }
-    }
-
-    // 4. Seed Requests
-    for (const req of SEED_REQUESTS) {
-      const exists = await CollectionRequest.findOne({ numericId: req.numericId });
-      if (!exists) {
-        const newReq = new CollectionRequest(req);
-        await newReq.save();
-        console.log(`  📦 Created sample request #${req.numericId}`);
-      }
-    }
-
+async function seedDatabase() {
+  try {
+    await runSeed(true);
+    console.log(`✅ Seeded ${SEED_CATEGORIES.length} Categories, ${SEED_CENTERS.length} Centers, ${SEED_USERS.length} Users, ${SEED_REQUESTS.length} Requests.`);
     console.log('\n🎉 MongoDB database seeding complete!');
     await mongoose.disconnect();
     process.exit(0);
@@ -318,5 +408,12 @@ if (require.main === module) {
   seedDatabase();
 }
 
-module.exports = seedDatabase;
+module.exports = {
+  seedDatabase,
+  runSeed,
+  SEED_USERS,
+  SEED_CATEGORIES,
+  SEED_CENTERS,
+  SEED_REQUESTS,
+};
 

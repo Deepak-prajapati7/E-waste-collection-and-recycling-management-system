@@ -17,73 +17,15 @@ const VALID_STATUSES = [
 
 const mongoose = require('mongoose');
 
+const { SEED_REQUESTS } = require('../scripts/seed');
+
 // In-memory fallback dataset for when MongoDB is connecting or offline
-let memoryRequests = [
-  {
-    numericId: 1730000001,
-    id: 1730000001,
-    user: 'Rahul Sharma',
-    email: 'rahul@example.com',
-    category: 'Computers',
-    method: 'Pickup',
-    qty: 2,
-    date: '2026-11-08',
-    location: 'Plot 15, Malviya Nagar, Jaipur, Rajasthan',
-    phone: '9876500001',
-    notes: '2 old desktop towers and monitor with power cables',
-    status: 'Scheduled',
-    estimatedWeight: 13.0,
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    history: [
-      { status: 'Pending', at: new Date(Date.now() - 86400000 * 3), by: 'Rahul Sharma', note: 'Submitted via web' },
-      { status: 'Approved', at: new Date(Date.now() - 86400000 * 2), by: 'System Admin', note: 'Verified by dispatcher' },
-      { status: 'Scheduled', at: new Date(Date.now() - 86400000 * 1), by: 'System Admin', note: 'Assigned to EcoCycle Van #3' },
-    ],
-  },
-  {
-    numericId: 1730000002,
-    id: 1730000002,
-    user: 'Rahul Sharma',
-    email: 'rahul@example.com',
-    category: 'Mobile phones',
-    method: 'Drop-off',
-    qty: 3,
-    date: '2026-10-20',
-    location: 'EcoCycle Certified Hub - Jaipur Central',
-    phone: '9876500001',
-    notes: 'Old Android smartphones, batteries intact',
-    status: 'Completed',
-    estimatedWeight: 1.5,
-    actualWeight: 1.5,
-    createdAt: new Date(Date.now() - 86400000 * 15).toISOString(),
-    history: [
-      { status: 'Pending', at: new Date(Date.now() - 86400000 * 15), by: 'Rahul Sharma' },
-      { status: 'Approved', at: new Date(Date.now() - 86400000 * 14), by: 'System Admin' },
-      { status: 'Collected', at: new Date(Date.now() - 86400000 * 13), by: 'Jaipur Hub Staff' },
-      { status: 'Processing', at: new Date(Date.now() - 86400000 * 12), by: 'Recovery Dept' },
-      { status: 'Completed', at: new Date(Date.now() - 86400000 * 10), by: 'Recovery Dept', note: 'Precious metals recovered' },
-    ],
-  },
-  {
-    numericId: 1730000003,
-    id: 1730000003,
-    user: 'Priya Verma',
-    email: 'priya@example.com',
-    category: 'Batteries',
-    method: 'Pickup',
-    qty: 5,
-    date: '2026-11-12',
-    location: 'Flat 4B, Green Glen, Delhi',
-    phone: '9876500002',
-    notes: 'Laptop batteries in protective casing',
-    status: 'Pending',
-    estimatedWeight: 2.5,
-    createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-    history: [
-      { status: 'Pending', at: new Date(Date.now() - 3600000 * 4), by: 'Priya Verma', note: 'Awaiting dispatcher review' },
-    ],
-  },
-];
+let memoryRequests = SEED_REQUESTS.map((r) => ({
+  ...r,
+  id: r.numericId,
+  createdAt: (r.history && r.history[0] && r.history[0].at ? new Date(r.history[0].at) : new Date()).toISOString(),
+  history: (r.history || []).map((h) => ({ ...h })),
+}));
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 

@@ -19,6 +19,15 @@ const memoryUsers = [
     address: 'Jaipur, Rajasthan',
   },
   {
+    name: 'Priya Verma',
+    email: 'priya@example.com',
+    role: 'user',
+    passwordHash: '$2a$10$wT0Xh1eP1u6g4/1m9b8c.exxx', // demo1234
+    passwordPlain: 'demo1234',
+    phone: '9876500002',
+    address: 'Delhi, India',
+  },
+  {
     name: 'System Admin',
     email: 'admin@example.com',
     role: 'admin',

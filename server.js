@@ -53,34 +53,16 @@ mongoose.connection.on('disconnected', () => {
 async function autoSeedIfEmpty() {
   try {
     const User = require('./models/User');
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      console.log('🌱 [MongoDB] Empty database detected. Auto-seeding initial demo data...');
-      const seedDatabase = require('./scripts/seed');
-      // Run seeder without process.exit
-      const WasteCategory = require('./models/WasteCategory');
-      const RecyclingCenter = require('./models/RecyclingCenter');
-      const CollectionRequest = require('./models/CollectionRequest');
-
-      const adminUser = new User({
-        name: 'System Admin',
-        email: 'admin@example.com',
-        password: 'demo1234',
-        role: 'admin',
-      });
-      await adminUser.save();
-
-      const demoUser = new User({
-        name: 'Rahul Sharma',
-        email: 'rahul@example.com',
-        password: 'demo1234',
-        role: 'user',
-        phone: '9876500001',
-        address: 'Jaipur, Rajasthan',
-      });
-      await demoUser.save();
-
-      console.log('✅ [MongoDB] Seeded demo users (rahul@example.com, admin@example.com).');
+    const CollectionRequest = require('./models/CollectionRequest');
+    const [userCount, reqCount] = await Promise.all([
+      User.countDocuments(),
+      CollectionRequest.countDocuments(),
+    ]);
+    if (userCount === 0 || reqCount === 0) {
+      console.log('🌱 [MongoDB] Empty collections detected. Auto-seeding initial demo data...');
+      const { runSeed } = require('./scripts/seed');
+      await runSeed(false);
+      console.log('✅ [MongoDB] Auto-seeded demo users, categories, centers & 8 sample requests.');
     }
   } catch (seedErr) {
     console.warn('[MongoDB] Auto-seed check finished:', seedErr.message);
