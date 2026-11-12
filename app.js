@@ -17,84 +17,112 @@
       code: "PC",
       desc: "Desktops, laptops, monitors, keyboards and mice",
       note: "",
+      avgWeight: 6.5,
+      co2PerKg: 1.8,
     },
     {
       name: "Mobile phones",
       code: "PH",
       desc: "Phones, tablets, chargers and accessories",
       note: "Remove SIM and memory cards",
+      avgWeight: 0.3,
+      co2PerKg: 2.5,
     },
     {
       name: "Batteries",
       code: "BT",
       desc: "Rechargeable and household batteries",
       note: "Keep damaged batteries separate",
+      avgWeight: 0.5,
+      co2PerKg: 1.2,
     },
     {
       name: "Televisions",
       code: "TV",
       desc: "LCD, LED, plasma and other displays",
       note: "Handle screens upright",
+      avgWeight: 14.0,
+      co2PerKg: 1.5,
     },
     {
       name: "Printers",
       code: "PR",
       desc: "Printers, scanners, fax machines, ink and toner units",
       note: "",
+      avgWeight: 7.0,
+      co2PerKg: 1.3,
     },
     {
       name: "Cables",
       code: "CB",
       desc: "Power cords, adapters, USB cables and other wiring",
       note: "",
+      avgWeight: 0.8,
+      co2PerKg: 2.1,
     },
     {
       name: "Game consoles",
       code: "GC",
       desc: "Consoles, controllers and handheld devices",
       note: "Sign out of accounts",
+      avgWeight: 3.2,
+      co2PerKg: 1.6,
     },
     {
       name: "Audio equipment",
       code: "AU",
       desc: "Speakers, headphones, radios and stereo equipment",
       note: "",
+      avgWeight: 2.4,
+      co2PerKg: 1.4,
     },
     {
       name: "Cameras",
       code: "CA",
       desc: "Digital cameras, camcorders, lenses and accessories",
       note: "Remove memory cards",
+      avgWeight: 0.9,
+      co2PerKg: 1.9,
     },
     {
       name: "Small appliances",
       code: "SA",
       desc: "Small electric kitchen, grooming and household appliances",
       note: "",
+      avgWeight: 2.2,
+      co2PerKg: 1.1,
     },
     {
       name: "Networking equipment",
       code: "NW",
       desc: "Routers, modems, switches and network accessories",
       note: "",
+      avgWeight: 1.1,
+      co2PerKg: 1.7,
     },
     {
       name: "Wearables",
       code: "WR",
       desc: "Smartwatches, fitness trackers and other electronic wearables",
       note: "Built-in batteries: do not open",
+      avgWeight: 0.2,
+      co2PerKg: 2.2,
     },
     {
       name: "Lamps and lighting",
       code: "LT",
       desc: "LED lamps and electronic lighting",
       note: "Ask the point about special handling",
+      avgWeight: 0.4,
+      co2PerKg: 1.0,
     },
     {
       name: "Other small electronics",
       code: "OT",
       desc: "Calculators, toys, power banks and other small devices",
       note: "Power banks: treat as batteries",
+      avgWeight: 0.6,
+      co2PerKg: 1.5,
     },
   ];
 
@@ -136,12 +164,14 @@
       { id: "map", label: "Find a point", icon: "pin" },
       { id: "categories", label: "Categories", icon: "box" },
       { id: "guide", label: "Safety guide", icon: "book" },
+      { id: "docs", label: "Project & DB", icon: "db" },
     ],
     admin: [
       { id: "overview", label: "Overview", icon: "grid" },
       { id: "requests", label: "All requests", icon: "list" },
       { id: "map", label: "Recycling points", icon: "pin" },
       { id: "guide", label: "Safety guide", icon: "book" },
+      { id: "docs", label: "Project & DB", icon: "db" },
     ],
   };
   const TITLES = {
@@ -151,6 +181,7 @@
     map: { user: "Find a drop-off point", admin: "Recycling points" },
     categories: "Accepted categories",
     guide: "Safety guide",
+    docs: "Project & DB Documentation",
   };
 
   const QUICK_CITIES = [
@@ -264,8 +295,207 @@
   }
 
   const TOKEN_KEY = "ecocycle_jwt_token";
+  let backendStatusOnline = false;
+
+  const DAY_MS = 86400000;
+  const isoDaysAgo = (days) => toISO(new Date(Date.now() - DAY_MS * days));
+  const atDaysAgo = (days, hours = 0) =>
+    new Date(Date.now() - DAY_MS * days - hours * 3600000).toISOString();
+
+  const FALLBACK_CERTIFIED_CENTERS = [
+    { name: "EcoCycle Certified Hub - Jaipur Central", address: "Malviya Industrial Area, Jaipur, Rajasthan 302017", city: "Jaipur", phone: "+91 98765 43210", email: "jaipur@ecocycle.org", lat: 26.8549, lng: 75.8243, verifiedPartner: true },
+    { name: "VKIA Authorized E-Waste Depot - North Jaipur", address: "Vishwakarma Industrial Area, Road No. 9, Jaipur 302013", city: "Jaipur", phone: "+91 98765 43225", email: "vkia@ecocycle.org", lat: 26.9922, lng: 75.7720, verifiedPartner: true },
+    { name: "Green Earth Recycling & Recovery Centre", address: "Sector 18, Electronic City, Gurugram, Delhi NCR 122015", city: "Delhi", phone: "+91 98765 43211", email: "delhi@greenearth.org", lat: 28.4985, lng: 77.0818, verifiedPartner: true },
+    { name: "EcoCycle Capital Circular Hub - Okhla", address: "Phase II, Okhla Industrial Area, New Delhi 110020", city: "Delhi", phone: "+91 98765 43215", email: "delhi.okhla@ecocycle.org", lat: 28.5355, lng: 77.2732, verifiedPartner: true },
+    { name: "NCR E-Waste & Electronics Collection Station", address: "Sector 62, Electronic City, Noida, Uttar Pradesh 201309", city: "Delhi", phone: "+91 98765 43216", email: "noida@ecocycle.org", lat: 28.6280, lng: 77.3649, verifiedPartner: true },
+    { name: "EcoTech Electronic Scrap & Circular Hub", address: "Peenya Industrial Area 2nd Stage, Bengaluru, Karnataka 560058", city: "Bengaluru", phone: "+91 98765 43212", email: "bengaluru@ecotech.org", lat: 13.0285, lng: 77.5192, verifiedPartner: true },
+    { name: "Silicon Plateau E-Waste Depot - Whitefield", address: "EPIP Zone, Whitefield, Bengaluru, Karnataka 560066", city: "Bengaluru", phone: "+91 98765 43217", email: "whitefield@ecocycle.org", lat: 12.9850, lng: 77.7366, verifiedPartner: true },
+    { name: "Mumbai Zero-Waste Reclamation Facility", address: "Andheri East MIDC, Mumbai, Maharashtra 400093", city: "Mumbai", phone: "+91 98765 43213", email: "mumbai@ecocycle.org", lat: 19.1197, lng: 72.8697, verifiedPartner: true },
+    { name: "Navi Mumbai Certified E-Cycle Recovery Center", address: "TTC Industrial Area, Kopar Khairane, Navi Mumbai 400709", city: "Mumbai", phone: "+91 98765 43218", email: "navimumbai@ecocycle.org", lat: 19.1030, lng: 73.0185, verifiedPartner: true },
+    { name: "Southern E-Waste Authorized Collection Point", address: "Guindy Industrial Estate, Chennai, Tamil Nadu 600032", city: "Chennai", phone: "+91 98765 43220", email: "chennai@ecocycle.org", lat: 13.0067, lng: 80.2206, verifiedPartner: true },
+    { name: "Bengal Tech-Waste & Refurbishment Facility", address: "Salt Lake Sector V, Kolkata, West Bengal 700091", city: "Kolkata", phone: "+91 98765 43221", email: "kolkata@ecocycle.org", lat: 22.5735, lng: 88.4331, verifiedPartner: true },
+    { name: "Cyberabad Certified E-Waste Circular Hub", address: "HITEC City, Madhapur, Hyderabad, Telangana 500081", city: "Hyderabad", phone: "+91 98765 43223", email: "hyderabad@ecocycle.org", lat: 17.4435, lng: 78.3772, verifiedPartner: true },
+    { name: "Pune Eco-Recycle Facility", address: "MIDC Bhosari, Pimpri-Chinchwad, Pune, Maharashtra 411026", city: "Pune", phone: "+91 98765 43224", email: "pune@ecocycle.org", lat: 18.6298, lng: 73.8441, verifiedPartner: true },
+    { name: "Gujarat CleanTech & Metals Hub", address: "GIDC Industrial Estate, Vatva, Ahmedabad, Gujarat 382445", city: "Ahmedabad", phone: "+91 98765 43226", email: "ahmedabad@ecocycle.org", lat: 22.9567, lng: 72.6312, verifiedPartner: true },
+    { name: "Awadh E-Waste Collection & Circular Point", address: "Transport Nagar, Kanpur Road, Lucknow, Uttar Pradesh 226012", city: "Lucknow", phone: "+91 98765 43227", email: "lucknow@ecocycle.org", lat: 26.7821, lng: 80.8924, verifiedPartner: true },
+    { name: "City Beautiful Clean E-Recycle Hub", address: "Industrial Area Phase 1, Chandigarh 160002", city: "Chandigarh", phone: "+91 98765 43228", email: "chandigarh@ecocycle.org", lat: 30.7046, lng: 76.7985, verifiedPartner: true },
+  ];
+
+  const DEFAULT_OFFLINE_REQUESTS = [
+    {
+      id: 1730000008,
+      user: "Rahul Sharma",
+      email: "rahul@example.com",
+      category: "Wearables",
+      method: "Drop-off",
+      qty: 2,
+      date: isoDaysAgo(-1),
+      location: "VKIA Authorized E-Waste Depot - North Jaipur",
+      phone: "9876500001",
+      notes: "Fitness trackers with original charging cradles",
+      status: "Pending",
+      estimatedWeight: 0.4,
+      createdAt: atDaysAgo(0, 9),
+      history: [{ status: "Pending", at: atDaysAgo(0, 9), by: "Rahul Sharma", note: "Submitted for weekend drop-off" }],
+    },
+    {
+      id: 1730000003,
+      user: "Priya Verma",
+      email: "priya@example.com",
+      category: "Batteries",
+      method: "Pickup",
+      qty: 5,
+      date: isoDaysAgo(0),
+      location: "Flat 4B, Green Glen, Delhi",
+      phone: "9876500002",
+      notes: "Laptop batteries in protective casing",
+      status: "Pending",
+      estimatedWeight: 2.5,
+      createdAt: atDaysAgo(0, 4),
+      history: [{ status: "Pending", at: atDaysAgo(0, 4), by: "Priya Verma", note: "Awaiting dispatcher review" }],
+    },
+    {
+      id: 1730000006,
+      user: "Rahul Sharma",
+      email: "rahul@example.com",
+      category: "Networking equipment",
+      method: "Drop-off",
+      qty: 4,
+      date: isoDaysAgo(2),
+      location: "EcoCycle Certified Hub - Jaipur Central",
+      phone: "9876500001",
+      notes: "Dual-band Wi-Fi routers and gigabit switch",
+      status: "Approved",
+      estimatedWeight: 4.4,
+      createdAt: atDaysAgo(2),
+      history: [
+        { status: "Pending", at: atDaysAgo(2), by: "Rahul Sharma" },
+        { status: "Approved", at: atDaysAgo(1), by: "System Admin", note: "Drop-off window open 9 AM – 6 PM" },
+      ],
+    },
+    {
+      id: 1730000001,
+      user: "Rahul Sharma",
+      email: "rahul@example.com",
+      category: "Computers",
+      method: "Pickup",
+      qty: 2,
+      date: isoDaysAgo(4),
+      location: "Plot 15, Malviya Nagar, Jaipur, Rajasthan",
+      phone: "9876500001",
+      notes: "2 old desktop towers and monitor with power cables",
+      status: "Scheduled",
+      estimatedWeight: 13.0,
+      createdAt: atDaysAgo(4),
+      history: [
+        { status: "Pending", at: atDaysAgo(4), by: "Rahul Sharma", note: "Submitted via web" },
+        { status: "Approved", at: atDaysAgo(3), by: "System Admin", note: "Verified by dispatcher" },
+        { status: "Scheduled", at: atDaysAgo(1), by: "System Admin", note: "Assigned to EcoCycle Van #3" },
+      ],
+    },
+    {
+      id: 1730000005,
+      user: "Priya Verma",
+      email: "priya@example.com",
+      category: "Printers",
+      method: "Drop-off",
+      qty: 2,
+      date: isoDaysAgo(8),
+      location: "EcoCycle Capital Circular Hub - Okhla, Delhi",
+      phone: "9876500002",
+      notes: "LaserJet office printers, cartridges removed",
+      status: "Processing",
+      estimatedWeight: 14.0,
+      createdAt: atDaysAgo(9),
+      history: [
+        { status: "Pending", at: atDaysAgo(9), by: "Priya Verma" },
+        { status: "Approved", at: atDaysAgo(8), by: "System Admin" },
+        { status: "Collected", at: atDaysAgo(7), by: "Okhla Hub Staff" },
+        { status: "Processing", at: atDaysAgo(5), by: "Recovery Dept", note: "Sorting steel chassis & fuser assembly" },
+      ],
+    },
+    {
+      id: 1730000002,
+      user: "Rahul Sharma",
+      email: "rahul@example.com",
+      category: "Mobile phones",
+      method: "Drop-off",
+      qty: 3,
+      date: isoDaysAgo(15),
+      location: "EcoCycle Certified Hub - Jaipur Central",
+      phone: "9876500001",
+      notes: "Old Android smartphones, batteries intact",
+      status: "Completed",
+      estimatedWeight: 1.5,
+      actualWeight: 1.5,
+      createdAt: atDaysAgo(15),
+      history: [
+        { status: "Pending", at: atDaysAgo(15), by: "Rahul Sharma" },
+        { status: "Approved", at: atDaysAgo(14), by: "System Admin" },
+        { status: "Collected", at: atDaysAgo(13), by: "Jaipur Hub Staff" },
+        { status: "Processing", at: atDaysAgo(12), by: "Recovery Dept" },
+        { status: "Completed", at: atDaysAgo(10), by: "Recovery Dept", note: "Precious metals recovered" },
+      ],
+    },
+    {
+      id: 1730000004,
+      user: "Rahul Sharma",
+      email: "rahul@example.com",
+      category: "Televisions",
+      method: "Pickup",
+      qty: 1,
+      date: isoDaysAgo(28),
+      location: "B-14, Vaishali Nagar, Jaipur, Rajasthan",
+      phone: "9876500001",
+      notes: "43-inch LED TV with stand and remote",
+      status: "Completed",
+      estimatedWeight: 14.0,
+      actualWeight: 13.8,
+      createdAt: atDaysAgo(28),
+      history: [
+        { status: "Pending", at: atDaysAgo(28), by: "Rahul Sharma", note: "Booked home pickup" },
+        { status: "Approved", at: atDaysAgo(27), by: "System Admin", note: "Crew slot confirmed" },
+        { status: "Scheduled", at: atDaysAgo(26), by: "System Admin", note: "Assigned to Van #2" },
+        { status: "Collected", at: atDaysAgo(25), by: "Jaipur Hub Staff" },
+        { status: "Processing", at: atDaysAgo(23), by: "Recovery Dept" },
+        { status: "Completed", at: atDaysAgo(21), by: "Recovery Dept", note: "Display panel & PCB recycled" },
+      ],
+    },
+    {
+      id: 1730000007,
+      user: "Priya Verma",
+      email: "priya@example.com",
+      category: "Small appliances",
+      method: "Pickup",
+      qty: 3,
+      date: isoDaysAgo(38),
+      location: "Sector 62, Noida, Delhi NCR",
+      phone: "9876500002",
+      notes: "Electric kettle, toaster, and induction cooktop",
+      status: "Completed",
+      estimatedWeight: 6.6,
+      actualWeight: 6.4,
+      createdAt: atDaysAgo(38),
+      history: [
+        { status: "Pending", at: atDaysAgo(38), by: "Priya Verma" },
+        { status: "Approved", at: atDaysAgo(37), by: "System Admin" },
+        { status: "Collected", at: atDaysAgo(35), by: "Noida Field Team" },
+        { status: "Completed", at: atDaysAgo(33), by: "Recovery Dept", note: "Copper coils & heating elements recovered" },
+      ],
+    },
+  ];
+
+  function ensureOfflineRequests() {
+    const existing = readStoredJson(STORE.requests, null);
+    if (existing === null) {
+      writeStoredJson(STORE.requests, DEFAULT_OFFLINE_REQUESTS);
+      return [...DEFAULT_OFFLINE_REQUESTS];
+    }
+    return existing;
+  }
 
   function setBackendStatus(online) {
+    backendStatusOnline = Boolean(online);
     const pill = $("backendPill");
     const text = $("backendStatusText");
     if (!pill || !text) return;
