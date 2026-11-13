@@ -220,6 +220,12 @@
   const toISO = (d) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const todayISO = () => toISO(new Date());
+  function getTimeGreeting(name = "Deepak") {
+    const hour = new Date().getHours();
+    const period = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+    const firstName = String(name || "Deepak").trim().split(/\s+/).filter(Boolean)[0] || "Deepak";
+    return `Good ${period} ${firstName}`;
+  }
   const fmtDate = (iso) => {
     const d = new Date(String(iso).length <= 10 ? `${iso}T00:00:00` : iso);
     return Number.isNaN(d.getTime())
@@ -812,7 +818,7 @@
     authMode = mode;
     const signup = mode === "signup";
     $("authNameField").hidden = !signup;
-    $("authTitle").textContent = signup ? "Create account" : "Sign in";
+    $("authTitle").textContent = signup ? "Create account" : getTimeGreeting("Deepak");
     $("authDescription").textContent = signup
       ? "Create a user account. Administrator access is provisioned separately."
       : "Use your account to continue.";
@@ -1133,11 +1139,8 @@
 
     updateSustainabilityAndPipeline(mine, count, done);
 
-    const hour = new Date().getHours();
-    const timeGreeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
     if ($("overviewWelcomeGreeting") && state.user) {
-      const firstName = (state.user.name || "Member").split(" ")[0];
-      $("overviewWelcomeGreeting").textContent = `${timeGreeting}, ${firstName} 👋`;
+      $("overviewWelcomeGreeting").textContent = `${getTimeGreeting(state.user.name)} 👋`;
     }
 
     if (isAdmin()) {
