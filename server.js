@@ -171,6 +171,8 @@ function startServer(port) {
   return server;
 }
 
-startServer(Number(PORT));
+if (require.main === module) {
+  startServer(Number(PORT));
+}
 
-module.exports = { app, server };
+module.exports = { app, server, startServer, connectMongoDB };
