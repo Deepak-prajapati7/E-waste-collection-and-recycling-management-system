@@ -1,7 +1,12 @@
-const test = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');
+const mongoose = require('mongoose');
 const { app } = require('../server.js');
+
+after(async () => {
+  await mongoose.disconnect();
+});
 
 async function startTestServer() {
   const server = app.listen(0);
