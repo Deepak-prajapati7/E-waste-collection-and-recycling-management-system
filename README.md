@@ -36,6 +36,12 @@ To populate MongoDB with verified recycling centers, waste categories, sample re
 npm run seed
 ```
 
+### 5. Verify the project works
+Run the validation suite before submission or demo:
+```bash
+npm test
+```
+
 ---
 
 ## 🔑 Demo Accounts
